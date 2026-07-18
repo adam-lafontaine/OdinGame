@@ -1,11 +1,11 @@
 #+private
-package game_io_test
+package app
 
-import "../../lib/types"
-import inp "../../lib/io/input"
-import img "../../lib/image_view"
-import mb "../../lib/memory_buffer"
-import sv "../../lib/span_view"
+import "../../../lib/types"
+import inp "../../../lib/io/input"
+import img "../../../lib/image_view"
+import mb "../../../lib/memory_buffer"
+import sv "../../../lib/span_view"
 
 
 Vec2Df32 :: types.Vec2Df32

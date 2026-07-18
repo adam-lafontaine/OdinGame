@@ -1,5 +1,5 @@
 #+private
-package game_io_test
+package app
 
 
 KeyboardOnOff :: [KeyboardId]b8

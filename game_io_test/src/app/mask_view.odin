@@ -1,7 +1,7 @@
 #+private
-package game_io_test
+package app
 
-import img "../../lib/image_view"
+import img "../../../lib/image_view"
 
 import "core:fmt"
 import "core:math"

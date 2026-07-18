@@ -1,9 +1,9 @@
 #+private
-package game_io_test
+package app
 
 import "core:math"
 
-import "../res"
+import "../../res"
 
 
 /* screen dimensions */

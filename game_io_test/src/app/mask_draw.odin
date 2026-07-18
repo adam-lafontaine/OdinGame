@@ -1,8 +1,8 @@
 #+private
-package game_io_test
+package app
 
-import img "../../lib/image_view"
-import ascii "../../lib/ascii_image"
+import img "../../../lib/image_view"
+import ascii "../../../lib/ascii_image"
 
 import "core:fmt"
 import "core:math"
