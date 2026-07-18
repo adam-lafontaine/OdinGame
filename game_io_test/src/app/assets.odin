@@ -4,6 +4,7 @@ package app
 import img "../../../lib/image_view"
 import mb "../../../lib/memory_buffer"
 import fs "../../../lib/files"
+import sv "../../../lib/span_view"
 import "../../res"
 
 

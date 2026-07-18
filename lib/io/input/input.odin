@@ -1,5 +1,11 @@
 package input
 
+import tp "../../types"
+
+Pos2Di32 :: tp.Vec2Di32
+Vec2Di32 :: tp.Vec2Di32
+Vec2Df32 :: tp.Vec2Df32
+
 
 InputStatus :: enum
 {

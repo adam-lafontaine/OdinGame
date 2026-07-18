@@ -1,6 +1,8 @@
 #+private
 package app
 
+import inp "../../../lib/io/input"
+
 
 KeyboardOnOff :: [KeyboardId]b8
 MouseBtnOnOff :: [MouseId]b8

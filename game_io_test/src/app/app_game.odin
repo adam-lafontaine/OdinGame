@@ -4,6 +4,8 @@ package app
 import "core:math"
 
 import "../../res"
+import img "../../../lib/image_view"
+import mb "../../../lib/memory_buffer"
 
 
 /* screen dimensions */

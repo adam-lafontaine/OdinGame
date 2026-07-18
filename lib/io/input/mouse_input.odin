@@ -1,10 +1,5 @@
 package input
 
-import "../../util"
-
-Pos2Di32 :: util.Vec2Di32
-Vec2Di32 :: util.Vec2Di32
-
 
 MouseButtons :: enum
 {

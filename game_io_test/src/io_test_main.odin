@@ -10,7 +10,7 @@ import inp "../../lib/io/input"
 import game "app"
 
 
-Vec2Du32 :: util.Vec2Du32
+Vec2Du32 :: win.Vec2Du32
 ImageView :: img.ImageView
 Pixel32 :: img.Pixel32
 

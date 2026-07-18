@@ -1,9 +1,8 @@
 package window
 
-import "../../util"
+import tp "../../types"
 
-
-Vec2Du32 :: util.Vec2Du32
+Vec2Du32 :: tp.Vec2Du32
 
 
 WindowStatus :: enum

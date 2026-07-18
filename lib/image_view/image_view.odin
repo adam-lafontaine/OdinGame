@@ -1,9 +1,10 @@
 package image_view
 
 import "core:slice"
-import "../util"
-import mb "../util/memory_buffer"
-import span "../util/span_view"
+
+import mb "../memory_buffer"
+import span "../span_view"
+import tp "../types"
 
 Pixel32 :: struct 
 {
@@ -17,7 +18,7 @@ Pixel8 :: u8
 
 Buffer32 :: mb.MemoryBuffer(Pixel32)
 Buffer8 :: mb.MemoryBuffer(Pixel8)
-Rect2Du32 :: util.Rect2Du32
+Rect2Du32 :: tp.Rect2Du32
 
 
 rgba_to_pixel :: proc(r: u8, g: u8, b: u8, a: u8) -> Pixel32

@@ -1,7 +1,5 @@
 package input
 
-import "../../util"
-
 import "core:math"
 
 
@@ -43,7 +41,7 @@ copy_button_state :: proc(src: ButtonState, dst: ^ButtonState)
 
 VectorState :: struct
 {
-    vec: util.Vec2Df32,
+    vec: Vec2Df32,
     magnitude: f32,
 
     // unit
