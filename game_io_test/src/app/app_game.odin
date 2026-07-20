@@ -7,6 +7,7 @@ import "core:thread"
 import "../../res"
 import img "../../../lib/image_view"
 import mb "../../../lib/memory_buffer"
+import "../../../lib/io/audio"
 
 
 /* screen dimensions */
@@ -220,8 +221,12 @@ app_init :: proc(state: ^AppState) -> AppResult
         return res
     }
 
-    data := get_data(state)
+    if !audio.init_audio()
+    {
+        return res
+    }
 
+    data := get_data(state)
 
     data.asset_thread = load_asset_memory_async(&data.asset_memory)
     data.asset_load_complete = false
@@ -268,5 +273,6 @@ app_reset :: proc(state: ^AppState)
 
 app_close :: proc(state: ^AppState)
 {
+    audio.close_audio()
     destroy_state_data(state)
 }
