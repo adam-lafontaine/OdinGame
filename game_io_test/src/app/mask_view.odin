@@ -151,7 +151,7 @@ mask_view_pixel_count ::proc(am: AssetMemory) -> u32
 }
 
 
-create_mask_view_data :: proc(am: AssetMemory, buffer: ^Buffer8) -> MaskViewData
+make_mask_view_data :: proc(am: AssetMemory, buffer: ^Buffer8) -> MaskViewData
 {
     gr := get_region_rects_ctlr()
     kr := get_region_rects_kbd()

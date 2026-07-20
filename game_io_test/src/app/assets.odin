@@ -1,6 +1,8 @@
 #+private
 package app
 
+import "core:thread"
+
 import img "../../../lib/image_view"
 import mb "../../../lib/memory_buffer"
 import fs "../../../lib/files"
@@ -8,8 +10,8 @@ import sv "../../../lib/span_view"
 import "../../res"
 
 
-BIN_DATA_PATH :: "./io_test_data.bin";
-BIN_DATA_FALLBACK :: "/home/adam/Repos/OdinGame/game_io_test/res/io_test_data.bin";
+BIN_DATA_PATH :: "./io_test_data.bin"
+BIN_DATA_FALLBACK :: "/home/adam/Repos/OdinGame/game_io_test/res/io_test_data.bin"
 
 
 
@@ -49,8 +51,8 @@ AssetMemory :: struct
         D: ByteView,
     },
 
-    pixels: img.Buffer32,
-    bytes: ByteBuffer,
+    image_pixels: img.Buffer32,
+    bin_bytes: ByteBuffer,
 
     status: AssetStatus
 }
@@ -58,8 +60,8 @@ AssetMemory :: struct
 
 destroy_asset_memory :: proc(memory: ^AssetMemory)
 {
-    img.destroy_buffer32(&memory.pixels)
-    mb.destroy_buffer(&memory.bytes)
+    img.destroy_buffer32(&memory.image_pixels)
+    mb.destroy_buffer(&memory.bin_bytes)
 
     memory.status = .None
 }
@@ -89,22 +91,22 @@ count_asset_pixels :: proc() -> u32
 
 read_image :: proc(memory: ^AssetMemory, id: res.ImageID) -> bool
 {
-    pixels := &memory.pixels
+    pixels := &memory.image_pixels
 
     dst: ^ImageView = nil
 
     switch id
     {
-    case .keyboard:   dst = &memory.image.keyboard
-    case .gamepad: dst = &memory.image.gamepad
-    case .mouse:      dst = &memory.image.mouse
-    case .arrow:      dst = &memory.image.arrow
+    case .keyboard: dst = &memory.image.keyboard
+    case .gamepad:  dst = &memory.image.gamepad
+    case .mouse:    dst = &memory.image.mouse
+    case .arrow:    dst = &memory.image.arrow
     case: return false
     }
 
     info := res.masks[id]
 
-    bv := sv.sub_view(memory.bytes, info.offset, info.size)
+    bv := sv.sub_view(memory.bin_bytes, info.offset, info.size)
     ok := img.read_image_from_memory(bv, pixels, dst)
 
     return ok
@@ -113,14 +115,14 @@ read_image :: proc(memory: ^AssetMemory, id: res.ImageID) -> bool
 
 read_asset_memory :: proc(memory: ^AssetMemory) -> bool
 {
-    buffer := &memory.bytes
+    buffer := &memory.bin_bytes
     if !buffer.ok
     {
         assert(false, "*** BAD BUFFER ***")
         return false
     }
     
-    pixels := &memory.pixels
+    pixels := &memory.image_pixels
     n_pixels := count_asset_pixels()
 
     result := mb.create_buffer(pixels, n_pixels)
@@ -143,42 +145,39 @@ read_asset_memory :: proc(memory: ^AssetMemory) -> bool
 }
 
 
-load_asset_memory :: proc(memory: ^AssetMemory) -> bool
+load_asset_memory_async :: proc(memory: ^AssetMemory) -> ^thread.Thread
 {
-    memory.status = .Load
-
-    buffer := fs.read_bytes(BIN_DATA_PATH)
-    if !buffer.ok
+    assets_read :: proc(bytes: ByteView, data: rawptr)
     {
-        buffer = fs.read_bytes(BIN_DATA_FALLBACK)
+        am := (^AssetMemory)(data)
+
+        am.bin_bytes = sv.clone(bytes)
+        if !am.bin_bytes.ok
+        {
+            am.status = .Fail
+            return
+        }        
+
+        ok := read_asset_memory(am)
+        am.status = ok ? .Process : .Fail
     }
 
-    if !buffer.ok
+    assets_fail :: proc(data: rawptr)
     {
-        assert(false, "*** ASSET BUFFER ***")
-        memory.status = .Fail
-        return false
+        assert(false, "*** FAIL ***")
+        am := (^AssetMemory)(data)
+        am.status = .Fail
     }
 
-    assert(len(buffer.data) > 0, "*** WAT? ***")
+    ctx := fs.FetchContext {
+        path = BIN_DATA_PATH,
+        path_backup = BIN_DATA_FALLBACK,
+        read_bytes = assets_read,
+        fetch_failed = assets_fail,
+        user_data = memory
+    }
 
-    memory.bytes = buffer
-    
-    ok := read_asset_memory(memory)
-    assert(ok, "*** ASSET READ ***")
-
-    memory.status = ok ? .Process : .Fail
-
-    return ok
+    return fs.fetch_start_thread(ctx)    
 }
 
 
-load_asset_memory_async :: proc(memory: ^AssetMemory)
-{
-    // blocking for now
-    ok := load_asset_memory(memory)
-    if !ok
-    {
-        assert(false, "*** LOAD ASSETS ***")
-    }
-}
