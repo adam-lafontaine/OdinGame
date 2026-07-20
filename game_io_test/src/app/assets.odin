@@ -10,8 +10,8 @@ import sv "../../../lib/span_view"
 import "../../res"
 
 
-BIN_DATA_PATH :: "./io_test_data.bin";
-BIN_DATA_FALLBACK :: "/home/adam/Repos/OdinGame/game_io_test/res/io_test_data.bin";
+BIN_DATA_PATH :: "./io_test_data.bin"
+BIN_DATA_FALLBACK :: "/home/adam/Repos/OdinGame/game_io_test/res/io_test_data.bin"
 
 
 
@@ -145,68 +145,29 @@ read_asset_memory :: proc(memory: ^AssetMemory) -> bool
 }
 
 
-/*load_asset_memory :: proc(memory: ^AssetMemory) -> bool
-{
-    memory.status = .Load
-
-    buffer := fs.read_bytes(BIN_DATA_PATH)
-    if !buffer.ok
-    {
-        buffer = fs.read_bytes(BIN_DATA_FALLBACK)
-    }
-
-    if !buffer.ok
-    {
-        assert(false, "*** ASSET BUFFER ***")
-        memory.status = .Fail
-        return false
-    }
-
-    assert(len(buffer.data) > 0, "*** WAT? ***")
-
-    memory.bin_bytes = buffer
-    
-    ok := read_asset_memory(memory)
-    assert(ok, "*** ASSET READ ***")
-
-    memory.status = ok ? .Process : .Fail
-
-    return ok
-}*/
-
-
-assets_read :: proc(bytes: ByteView, data: rawptr)
-{
-    am := (^AssetMemory)(data)
-
-    am.bin_bytes = sv.clone(bytes)
-    if !am.bin_bytes.ok
-    {
-        am.status = .Fail
-        return
-    }        
-
-    ok := read_asset_memory(am)
-    am.status = ok ? .Process : .Fail
-}
-
-assets_fail :: proc(data: rawptr)
-{
-    am := (^AssetMemory)(data)
-    am.status = .Fail
-}
-
-
 load_asset_memory_async :: proc(memory: ^AssetMemory) -> ^thread.Thread
 {
-    // blocking for now
-    /*ok := load_asset_memory(memory)
-    if !ok
+    assets_read :: proc(bytes: ByteView, data: rawptr)
     {
-        assert(false, "*** LOAD ASSETS ***")
-    }*/
+        am := (^AssetMemory)(data)
 
-    
+        am.bin_bytes = sv.clone(bytes)
+        if !am.bin_bytes.ok
+        {
+            am.status = .Fail
+            return
+        }        
+
+        ok := read_asset_memory(am)
+        am.status = ok ? .Process : .Fail
+    }
+
+    assets_fail :: proc(data: rawptr)
+    {
+        assert(false, "*** FAIL ***")
+        am := (^AssetMemory)(data)
+        am.status = .Fail
+    }
 
     ctx := new(fs.FetchContext)
     ctx.path = BIN_DATA_PATH

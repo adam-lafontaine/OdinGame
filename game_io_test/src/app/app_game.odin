@@ -248,13 +248,6 @@ app_set_screen_memory :: proc(state: ^AppState, screen: ImageView) -> bool
 
     data.out_view = screen
 
-    // process assets if already loaded
-    /*status := process_asset_memory(data)
-
-    ok := status == .Load || status == .Process || status == .Ready
-
-    return ok*/
-
     return true
 }
 
@@ -264,30 +257,6 @@ app_update :: proc(state: ^AppState, input: Input)
     data := get_data(state)
 
     data.state_update(state, input)
-
-    /*switch (data.asset_memory.status)
-    {
-    case .None:
-        img.fill(data.out_view, COLOR_UNEXPECTED)
-        return
-
-    case .Load, .Process:
-        process_asset_memory(data)
-        img.fill(data.out_view, COLOR_BACKGROUND)
-        return
-
-    case .Fail:
-        img.fill(data.out_view, COLOR_ERROR)
-        return
-
-    case .Ready:
-    }
-
-    map_input_list(input, &data.inputs)    
-    
-    img.fill(data.out_view, COLOR_BACKGROUND)
-
-    draw_map_list(&data.mask_views, data.inputs)*/
 }
 
 

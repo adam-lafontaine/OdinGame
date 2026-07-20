@@ -47,7 +47,7 @@ fetch :: proc(ctx: ^FetchContext)
     buffer := read_bytes(ctx.path)
     if !buffer.ok
     {
-        read_bytes(ctx.path_backup)
+        buffer = read_bytes(ctx.path_backup)
     }
 
     if buffer.ok
