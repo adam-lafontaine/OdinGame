@@ -1,6 +1,12 @@
 package audio
 
 
+import sv "../../span_view"
+
+
+ByteView :: sv.ByteView
+
+
 Music :: struct
 {
     handle: i32,
@@ -47,4 +53,22 @@ close_audio :: proc()
 load_music_from_file :: proc(music_file_path: string, music: ^Music) -> bool
 {
     return audio_load_music_from_file(music_file_path, music)
+}
+
+
+load_sound_from_file :: proc(music_file_path: string, sound: ^Sound) -> bool
+{
+    return audio_load_sound_from_file(music_file_path, sound)
+}
+
+
+load_music_from_bytes :: proc(bytes: ByteView, music: ^Music) -> bool
+{
+    return audio_load_music_from_bytes(bytes, music)
+}
+
+
+load_sound_from_bytes :: proc(bytes: ByteView, sound: ^Sound) -> bool
+{
+    return audio_load_sound_from_bytes(bytes, sound)
 }
