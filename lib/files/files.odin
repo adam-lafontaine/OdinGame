@@ -42,8 +42,21 @@ FetchContext :: struct
 }
 
 
-fetch :: proc(ctx: ^FetchContext)
+@(private="file")
+FetchRequest :: struct
 {
+    // hide new and free from api
+    ctx: FetchContext
+}
+
+
+@(private="file")
+fetch_thread_proc :: proc(t: ^thread.Thread)
+{
+    req := (^FetchRequest)(t.data)
+
+    ctx := req.ctx
+
     buffer := read_bytes(ctx.path)
     if !buffer.ok
     {
@@ -60,20 +73,17 @@ fetch :: proc(ctx: ^FetchContext)
         ctx.fetch_failed(ctx.user_data)
     }
 
-    free(ctx)
+    free(req)
 }
 
 
-fetch_start_thread :: proc(ctx: ^FetchContext) -> ^thread.Thread
+fetch_start_thread :: proc(ctx: FetchContext) -> ^thread.Thread
 {
-    thread_proc :: proc(t: ^thread.Thread)
-    {
-        fc := (^FetchContext)(t.data)
-        fetch(fc)
-    }
+    req := new(FetchRequest)
+    req.ctx = ctx
 
-    th := thread.create(thread_proc)
-    th.data = ctx
+    th := thread.create(fetch_thread_proc)
+    th.data = req
     thread.start(th)
 
     return th

@@ -169,12 +169,13 @@ load_asset_memory_async :: proc(memory: ^AssetMemory) -> ^thread.Thread
         am.status = .Fail
     }
 
-    ctx := new(fs.FetchContext)
-    ctx.path = BIN_DATA_PATH
-    ctx.path_backup = BIN_DATA_FALLBACK
-    ctx.read_bytes = assets_read
-    ctx.fetch_failed = assets_fail
-    ctx.user_data = memory
+    ctx := fs.FetchContext {
+        path = BIN_DATA_PATH,
+        path_backup = BIN_DATA_FALLBACK,
+        read_bytes = assets_read,
+        fetch_failed = assets_fail,
+        user_data = memory
+    }
 
     return fs.fetch_start_thread(ctx)    
 }
