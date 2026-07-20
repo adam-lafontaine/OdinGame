@@ -1,5 +1,8 @@
 package span_view
 
+import "core:mem"
+import "core:slice"
+
 import mb "../memory_buffer"
 
 
@@ -15,7 +18,7 @@ ByteView :: SpanView(byte)
 
 make_view :: proc(buffer: mb.MemoryBuffer($T)) -> SpanView(T)
 {
-    return SpanView {
+    return SpanView(T) {
         data = buffer.data
     }
 }
@@ -31,9 +34,25 @@ sub_view :: proc(buffer: mb.MemoryBuffer($T), offset: u32, length: u32) -> SpanV
 }
 
 
-/*sub_view :: proc(view: SpanView($T), offset: u32, length: u32) -> SpanView($T)
+copy :: proc(src: SpanView($T), dst: SpanView(T))
 {
-    return SpanView {
-        data = view.data[offset:length]
+    assert(len(src) == len(dst))
+
+    for s, i in src.data // mem.copy()?
+    {
+        dst.data[i] = s
     }
-}*/
+}
+
+
+clone :: proc(view: SpanView($T)) -> mb.MemoryBuffer(T)
+{
+    dst: mb.MemoryBuffer(T)
+
+    dst.data = slice.clone(view.data)
+    
+    dst.ok = true
+    dst.size = 0
+
+    return dst
+}

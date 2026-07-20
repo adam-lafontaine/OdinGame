@@ -116,3 +116,18 @@ pop_elements :: proc(buffer: ^MemoryBuffer($T), n_elements: u32)
         buffer.size -= n_elements
     }
 }
+
+
+clone :: proc(buffer: MemoryBuffer($T)) -> MemoryBuffer(T)
+{
+    dst: MemoryBuffer(T)
+
+    dst.data, err = slice.clone(buffer.data)
+    if err == nil
+    {
+        dst.ok = true
+        dst.size = 0
+    }
+
+    return dst
+}

@@ -2,6 +2,7 @@
 package app
 
 import "core:math"
+import "core:thread"
 
 import "../../res"
 import img "../../../lib/image_view"
@@ -53,6 +54,9 @@ screen_dimensions :: proc {
 }
 
 
+StateUpdateProc :: proc(state: ^AppState, input: Input)
+
+
 /* state */
 
 StateData :: struct
@@ -61,13 +65,17 @@ StateData :: struct
     // music
     // sounds
     asset_memory: AssetMemory,
+    asset_thread: ^thread.Thread,
+    asset_load_complete: bool,
 
     mask_views: MaskViewMapList,
     inputs: InputList,
     
     out_view: ImageView,
 
-    buffer8: img.Buffer8
+    buffer8: img.Buffer8,
+
+    state_update: StateUpdateProc,
 }
 
 
@@ -85,6 +93,23 @@ destroy_state_data ::proc(state: ^AppState)
 
     free(state.data)
 }
+
+
+create_state_data :: proc(state: ^AppState) -> bool
+{
+    state_data, err := new(StateData)
+    if err != nil
+    {
+        return false
+    }
+
+    state.data = cast(StateDataRef)state_data
+
+    return true
+}
+
+
+/* assets */
 
 
 process_asset_memory :: proc(data: ^StateData) -> AssetStatus
@@ -106,7 +131,7 @@ process_asset_memory :: proc(data: ^StateData) -> AssetStatus
         return am.status
     }
 
-    data.masks = create_mask_view_data(am^, buffer)
+    data.masks = make_mask_view_data(am^, buffer)
 
     dim := screen_dimensions(data.masks)
     out := data.out_view
@@ -127,20 +152,59 @@ process_asset_memory :: proc(data: ^StateData) -> AssetStatus
 }
 
 
-create_state_data :: proc(state: ^AppState) -> bool
+/* update modes */
+
+update_mode_error :: proc(state: ^AppState, input: Input)
 {
-    state_data, err := new(StateData)
-    if err != nil
-    {
-        return false
-    }
-
-    state.data = cast(StateDataRef)state_data
-
-    return true
+    img.fill(state.screen, COLOR_ERROR)
 }
 
 
+update_mode_ok :: proc(state: ^AppState, input: Input)
+{
+    data := get_data(state)
+
+    map_input_list(input, &data.inputs)    
+    
+    img.fill(data.out_view, COLOR_BACKGROUND)
+
+    draw_map_list(&data.mask_views, data.inputs)
+}
+
+
+update_mode_process_assets :: proc(state: ^AppState, input: Input)
+{
+    img.fill(state.screen, COLOR_BACKGROUND)
+
+    data := get_data(state)
+    status := process_asset_memory(data)
+
+    if (status == .Ready)
+    {
+        data.state_update = update_mode_ok
+    }
+    else
+    {
+        data.state_update = update_mode_error
+    }
+}
+
+
+update_mode_loading_assets :: proc(state: ^AppState, input: Input)
+{
+    img.fill(state.screen, COLOR_BACKGROUND)
+
+    data := get_data(state)
+
+    if thread.is_done(data.asset_thread)
+    {
+        thread.join(data.asset_thread)
+        thread.destroy(data.asset_thread)
+
+        data.state_update = update_mode_process_assets
+    }
+
+}
 
 
 
@@ -158,8 +222,10 @@ app_init :: proc(state: ^AppState) -> AppResult
 
     data := get_data(state)
 
-    // check asset_memory.status later
-    load_asset_memory_async(&data.asset_memory)    
+
+    data.asset_thread = load_asset_memory_async(&data.asset_memory)
+    data.asset_load_complete = false
+    data.state_update = update_mode_loading_assets        
 
     res.screen_dimensions = screen_dimensions()
     res.success = true
@@ -183,11 +249,13 @@ app_set_screen_memory :: proc(state: ^AppState, screen: ImageView) -> bool
     data.out_view = screen
 
     // process assets if already loaded
-    status := process_asset_memory(data)
+    /*status := process_asset_memory(data)
 
     ok := status == .Load || status == .Process || status == .Ready
 
-    return ok
+    return ok*/
+
+    return true
 }
 
 
@@ -195,14 +263,15 @@ app_update :: proc(state: ^AppState, input: Input)
 {
     data := get_data(state)
 
-    switch (data.asset_memory.status)
+    data.state_update(state, input)
+
+    /*switch (data.asset_memory.status)
     {
     case .None:
         img.fill(data.out_view, COLOR_UNEXPECTED)
         return
 
-    case .Load:
-    case .Process:
+    case .Load, .Process:
         process_asset_memory(data)
         img.fill(data.out_view, COLOR_BACKGROUND)
         return
@@ -218,7 +287,7 @@ app_update :: proc(state: ^AppState, input: Input)
     
     img.fill(data.out_view, COLOR_BACKGROUND)
 
-    draw_map_list(&data.mask_views, data.inputs)
+    draw_map_list(&data.mask_views, data.inputs)*/
 }
 
 
