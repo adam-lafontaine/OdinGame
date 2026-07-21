@@ -174,6 +174,8 @@ update_music :: proc(src: Input, list: MusicList)
         }
     }
 
+    music_refresh()
+
     map_btn(src.keyboard.keys[.kbd_1], list.music_A)
     map_btn(src.keyboard.keys[.kbd_2], list.music_B)
     map_btn(src.keyboard.keys[.kbd_3], list.music_C)

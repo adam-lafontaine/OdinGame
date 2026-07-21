@@ -149,7 +149,7 @@ process_asset_memory :: proc(data: ^StateData) -> AssetStatus
     data.music = make_music_list(am)
     data.sound = make_sound_list(am)
 
-    audio.set_master_volume(0.7)
+    audio.set_master_volume(0.5)
 
     am.status = .Ready
     return am.status

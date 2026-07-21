@@ -12,17 +12,12 @@ SoundID :: distinct i32
 Music :: struct
 {
     handle: MusicID,
-
-    is_on: bool,
-    is_paused: bool,
 }
 
 
 Sound :: struct
 {
     handle: SoundID,
-
-    is_on: bool,
 }
 
 
@@ -114,3 +109,6 @@ stop_sound :: proc(sound: ^Sound)
 
 
 set_master_volume :: proc(volume: f32) { audio_set_master_volume(volume) }
+
+
+music_refresh :: proc() { audio_music_update_jank() }

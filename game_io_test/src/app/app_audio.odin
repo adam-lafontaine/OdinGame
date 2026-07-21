@@ -28,10 +28,8 @@ play_music :: proc(music: MusicView)
 }
 
 
-stop_music :: proc()
-{
-    audio.stop_music()
-}
+stop_music ::audio.stop_music
+music_refresh :: audio.music_refresh
 
 
 MusicList :: struct
