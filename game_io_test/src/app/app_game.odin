@@ -164,11 +164,11 @@ update_mode_error :: proc(state: ^AppState, input: Input)
 update_mode_ok :: proc(state: ^AppState, input: Input)
 {
     data := get_data(state)
+    
 
     map_input_list(input, &data.inputs)    
     
     img.fill(data.out_view, COLOR_BACKGROUND)
-
     draw_map_list(&data.mask_views, data.inputs)
 }
 

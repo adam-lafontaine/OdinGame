@@ -6,6 +6,7 @@ import inp "../../../lib/io/input"
 import img "../../../lib/image_view"
 import mb "../../../lib/memory_buffer"
 import sv "../../../lib/span_view"
+import "../../../lib/io/audio"
 
 
 Vec2Df32 :: types.Vec2Df32
@@ -31,6 +32,9 @@ Mask     :: img.GraySubView
 
 ByteBuffer :: mb.MemoryBuffer(byte)
 ByteView :: sv.ByteView
+
+Music :: audio.Music
+Sound :: audio.Sound
 
 
 COLOR_BLACK       :: img.BLACK

@@ -74,7 +74,7 @@ music := [MusicID]MusicInfo {
 }
 
 
-SoundId :: enum
+SoundID :: enum
 {
     confirmation_002,
     laserRetro_000,
@@ -84,7 +84,7 @@ SoundId :: enum
 
 
 @(rodata)
-sound := [SoundId]SoundInfo {
+sound := [SoundID]SoundInfo {
     .confirmation_002    = {.OGG, 6677019, 14169 },
     .laserRetro_000      = {.OGG, 6691188, 12588 },
     .open_001            = {.OGG, 6703776, 9834 },
