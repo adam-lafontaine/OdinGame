@@ -84,18 +84,31 @@ play_music :: proc(music: ^Music)
 
 toggle_pause_music :: proc(){}
 
-stop_music :: proc(){}
+
+stop_music :: proc()
+{
+    audio_music_stop()
+}
+
 
 //fade_in_music :: proc(music: ^Music, fade_ms: u32){}
 
 //fade_out_music :: proc(fade_ms: u32){}
 
 
-play_sound :: proc(sound: ^Sound){}
+play_sound :: proc(sound: ^Sound)
+{
+    audio_play_sound(sound)
+}
+
 
 //play_sound_loop :: proc(sound: ^Sound){}
 
-stop_sound :: proc(sound: ^Sound){}
+
+stop_sound :: proc(sound: ^Sound)
+{
+    audio_stop_sound(sound)
+}
 
 //stop_sound :: proc(){}
 

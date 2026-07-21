@@ -287,7 +287,13 @@ audio_play_music :: proc(music: ^Music)
 }
 
 
-audio_toggle_pause_music :: proc()
+audio_music_toggle_pause :: proc()
+{
+
+}
+
+
+audio_music_stop :: proc()
 {
 
 }

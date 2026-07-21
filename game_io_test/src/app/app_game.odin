@@ -62,15 +62,16 @@ StateUpdateProc :: proc(state: ^AppState, input: Input)
 
 StateData :: struct
 {
-    masks: MaskViewData,
-    // music
-    // sounds
     asset_memory: AssetMemory,
     asset_thread: ^thread.Thread,
     asset_load_complete: bool,
 
+    masks: MaskViewData,
     mask_views: MaskViewMapList,
     inputs: InputList,
+
+    music: MusicList,
+    sound: SoundList,
     
     out_view: ImageView,
 
@@ -145,8 +146,10 @@ process_asset_memory :: proc(data: ^StateData) -> AssetStatus
 
     set_mask_list_views(data.masks, out, &data.mask_views)
     
-    // sounds
-    // music
+    data.music = make_music_list(am)
+    data.sound = make_sound_list(am)
+
+    audio.set_master_volume(0.7)
 
     am.status = .Ready
     return am.status
@@ -163,10 +166,11 @@ update_mode_error :: proc(state: ^AppState, input: Input)
 
 update_mode_ok :: proc(state: ^AppState, input: Input)
 {
-    data := get_data(state)
-    
+    data := get_data(state)    
 
-    map_input_list(input, &data.inputs)    
+    map_input_list(input, &data.inputs)
+    update_music(input, data.music)
+    update_sound(input, data.sound)
     
     img.fill(data.out_view, COLOR_BACKGROUND)
     draw_map_list(&data.mask_views, data.inputs)

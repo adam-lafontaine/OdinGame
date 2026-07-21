@@ -157,3 +157,42 @@ map_input_list :: proc(src: Input, dst: ^InputList)
     //map_joystick_input(src.joysticks[0], &dst.gamepad1)
     //map_joystick_input(src.joysticks[1], &dst.gamepad2)
 }
+
+
+update_music :: proc(src: Input, list: MusicList)
+{
+    map_btn :: proc(btn: BtnState, music: MusicView)
+    {
+        if btn.pressed
+        {
+            stop_music()
+            play_music(music)
+        }
+        else if btn.raised
+        {
+            stop_music()
+        }
+    }
+
+    map_btn(src.keyboard.keys[.kbd_1], list.music_A)
+    map_btn(src.keyboard.keys[.kbd_2], list.music_B)
+    map_btn(src.keyboard.keys[.kbd_3], list.music_C)
+    map_btn(src.keyboard.keys[.kbd_4], list.music_D)
+}
+
+
+update_sound :: proc(src: Input, list: SoundList)
+{
+    map_btn :: proc(btn: BtnState, sound: SoundView)
+    {
+        if btn.pressed
+        {
+            play_sound(sound)
+        }
+    }
+
+    map_btn(src.keyboard.keys[.kbd_W], list.sound_A)
+    map_btn(src.keyboard.keys[.kbd_A], list.sound_B)
+    map_btn(src.keyboard.keys[.kbd_S], list.sound_C)
+    map_btn(src.keyboard.keys[.kbd_D], list.sound_D)
+}
