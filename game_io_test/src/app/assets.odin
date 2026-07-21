@@ -38,18 +38,18 @@ AssetMemory :: struct
 
     music: struct
     {
-        A: ByteView,
-        B: ByteView,
-        C: ByteView,
-        D: ByteView,
+        A: Music,
+        B: Music,
+        C: Music,
+        D: Music,
     },
 
     sound: struct
     {
-        A: ByteView,
-        B: ByteView,
-        C: ByteView,
-        D: ByteView,
+        A: Sound,
+        B: Sound,
+        C: Sound,
+        D: Sound,
     },
 
     image_pixels: img.Buffer32,
@@ -116,7 +116,7 @@ read_image :: proc(memory: ^AssetMemory, id: res.ImageID) -> bool
 
 read_music :: proc(memory: ^AssetMemory, id: res.MusicID) -> bool
 {
-    dst: ^ByteView // !!!
+    dst: ^Music
     
     switch id
     {
@@ -128,12 +128,8 @@ read_music :: proc(memory: ^AssetMemory, id: res.MusicID) -> bool
 
     info := res.music[id]
 
-    // !!!
-    dst^ = sv.sub_view(memory.bin_bytes, info.offset, info.size)
-    ok := true
-
-    //bv := sv.sub_view(memory.bin_bytes, info.offset, info.size)
-    //ok := audio.load_music_from_bytes(bv, dst)
+    bv := sv.sub_view(memory.bin_bytes, info.offset, info.size)
+    ok := audio.load_music_from_bytes(bv, dst)
 
     return ok
 }
@@ -141,7 +137,7 @@ read_music :: proc(memory: ^AssetMemory, id: res.MusicID) -> bool
 
 read_sound :: proc(memory: ^AssetMemory, id: res.SoundID) -> bool
 {
-    dst: ^ByteView // !!!
+    dst: ^Sound
 
     switch id
     {
@@ -153,11 +149,8 @@ read_sound :: proc(memory: ^AssetMemory, id: res.SoundID) -> bool
 
     info := res.sound[id]
 
-    // !!!
-    dst^ = sv.sub_view(memory.bin_bytes, info.offset, info.size)
-    ok := true
-
-    // audio.load_sound_from_bytes()
+    bv := sv.sub_view(memory.bin_bytes, info.offset, info.size)
+    ok := audio.load_sound_from_bytes(bv, dst)
 
     return ok
 }

@@ -25,6 +25,8 @@ reset_sound :: proc(sound: ^Sound)
 MAX_MUSIC_TRACKS :: 8
 MAX_SOUND_TRACKS :: 8
 
+AUDIO_FILE_EXT :: ".ogg" // others?
+
 
 AudioList :: struct($T: typeid, $H: typeid, $N: u32)
 {
@@ -227,7 +229,7 @@ audio_load_music_from_bytes :: proc(bytes: ByteView, music: ^Music) -> bool
     length := cast(i32)len(bytes.data)
     p := raw_data(bytes.data[:])
 
-    data := rl.LoadMusicStreamFromMemory("ogg", p, length)
+    data := rl.LoadMusicStreamFromMemory(AUDIO_FILE_EXT, p, length)
     if !rl.IsMusicValid(data)
     {
         return false
@@ -250,7 +252,7 @@ audio_load_sound_from_bytes :: proc(bytes: ByteView, sound: ^Sound) -> bool
     length := cast(i32)len(bytes.data)
     p := raw_data(bytes.data[:])
 
-    wave := rl.LoadWaveFromMemory("ogg", p, length)
+    wave := rl.LoadWaveFromMemory(AUDIO_FILE_EXT, p, length)
     defer rl.UnloadWave(wave)
     if !rl.IsWaveValid(wave)
     {
