@@ -49,6 +49,7 @@ void set_window_icon(Window& window, Icon64 const& icon)
 Pros
 * Enum shorthand
 * Enumerated arrays
+* Alias distinct
 
 Cons
 * Packages - directory mess
