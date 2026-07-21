@@ -5,11 +5,13 @@ import sv "../../span_view"
 
 
 ByteView :: sv.ByteView
+MusicID :: distinct i32
+SoundID :: distinct i32
 
 
 Music :: struct
 {
-    handle: i32,
+    handle: MusicID,
 
     is_on: bool,
     is_paused: bool,
@@ -18,7 +20,7 @@ Music :: struct
 
 Sound :: struct
 {
-    handle: i32,
+    handle: SoundID,
 
     is_on: bool,
 }
@@ -72,3 +74,30 @@ load_sound_from_bytes :: proc(bytes: ByteView, sound: ^Sound) -> bool
 {
     return audio_load_sound_from_bytes(bytes, sound)
 }
+
+
+play_music :: proc(music: ^Music)
+{
+    audio_play_music(music)
+}
+
+
+toggle_pause_music :: proc(){}
+
+stop_music :: proc(){}
+
+//fade_in_music :: proc(music: ^Music, fade_ms: u32){}
+
+//fade_out_music :: proc(fade_ms: u32){}
+
+
+play_sound :: proc(sound: ^Sound){}
+
+//play_sound_loop :: proc(sound: ^Sound){}
+
+stop_sound :: proc(sound: ^Sound){}
+
+//stop_sound :: proc(){}
+
+
+set_master_volume :: proc(volume: f32) { audio_set_master_volume(volume) }

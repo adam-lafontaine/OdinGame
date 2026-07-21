@@ -22,21 +22,32 @@ reset_sound :: proc(sound: ^Sound)
 }
 
 
-MAX_MUSIC_TRACKS :: 2
+MAX_MUSIC_TRACKS :: 8
 MAX_SOUND_TRACKS :: 8
 
 
-AudioList :: struct($T: typeid, $N: u32)
+AudioList :: struct($T: typeid, $H: typeid, $N: u32)
 {
+    id_nil: H,
+    id_begin: H,
+    id_end: H,
+
+    count: int,
+
     items: [N + 1]T,
     active: [N + 1]b8,
-    path: [N + 1]string,
 }
 
 
-init_audio_list :: proc(list: ^AudioList($T, $N))
+init_audio_list :: proc(list: ^AudioList($T, $H, $N))
 {
-    for i in 0..<len(list.items)
+    list.count = cast(int)(N + 1)
+
+    list.id_nil = cast(H)0
+    list.id_begin = cast(H)1
+    list.id_end = cast(H)(list.count)
+
+    for i in 0..<list.count
     {
         list.items[i] = {}
         list.active[i] = false
@@ -44,71 +55,69 @@ init_audio_list :: proc(list: ^AudioList($T, $N))
 }
 
 
-close_audio_list :: proc(list: ^AudioList($T, $N), unload: $P)
+close_audio_list :: proc(list: ^AudioList($T, $H, $N), unload: $P)
 {
-    for i in 0..<len(list.items)
+    for i in 0..<list.count
     {
         if list.active[i]
         {
-            unload(list.items[i])            
-            delete(list.path[i])
+            unload(list.items[i])
             list.active[i] = false
         }
     }
 }
 
 
-add_item :: proc(list: ^AudioList($T, $N), item: T, path: string) -> (i32, bool)
+add_item :: proc(list: ^AudioList($T, $H, $N), item: T) -> (H, bool)
 {
-    count := cast(int)N
-
-    for id in 1..<count
+    for id: H = list.id_begin; id < list.id_end; id += 1
     {
         if !list.active[id]
         {
             list.items[id] = item
             list.active[id] = true
-            list.path[id] = path
-            return cast(i32)id, true
+
+            return id, true
         }
     }
 
-    return 0, false    
+    return list.id_nil, false    
 }
 
 
-remove_item :: proc(list: ^AudioList($T, $N), id: i32)
+remove_item :: proc(list: ^AudioList($T, $H, $N), id: H)
 {
-    id_min := cast(i32)1
-    id_max := cast(i32)N
-
-    if id < id_min || id > id_max
+    if id < list.id_begin || id >= list.id_end
     {
         return
     }
 
     list.active[id] = false
-    list.items[id] = list.items[0]
-    delete(list.path[id])
+    list.items[id] = list.items[list.id_nil]
 }
 
 
-get_item :: proc(list: ^AudioList($T, $N), id: i32) -> (T, bool)
+get_item :: proc(list: ^AudioList($T, $H, $N), id: H) -> (T, bool)
 {
-    id_min := cast(i32)1
-    id_max := cast(i32)N
-
-    if id < id_min || id > id_max
+    if id < list.id_begin || id >= list.id_end
     {
-        return list.items[0], false
+        return list.items[list.id_nil], false
     }
 
     return list.items[id], true
 }
 
 
-music_data: AudioList(rl.Music, MAX_MUSIC_TRACKS)
-sound_data: AudioList(rl.Sound, MAX_SOUND_TRACKS)
+audio_sound_data: AudioList(rl.Sound, SoundID, MAX_SOUND_TRACKS)
+audio_music_data: AudioList(rl.Music, MusicID, MAX_MUSIC_TRACKS)
+audio_music_id: MusicID = 0
+
+
+is_current_music :: proc(id: MusicID) -> bool
+{
+    return id != audio_music_data.id_nil && id == audio_music_id
+}
+
 
 
 
@@ -116,7 +125,7 @@ sound_data: AudioList(rl.Sound, MAX_SOUND_TRACKS)
 
 audio_destroy_music :: proc(music: ^Music)
 {
-    data, ok := get_item(&music_data, music.handle)
+    data, ok := get_item(&audio_music_data, music.handle)
     if !ok
     {
         return
@@ -125,14 +134,14 @@ audio_destroy_music :: proc(music: ^Music)
     rl.StopMusicStream(data)
     rl.UnloadMusicStream(data)
 
-    remove_item(&music_data, music.handle)
-    music.handle = 0
+    remove_item(&audio_music_data, music.handle)
+    music.handle = audio_music_data.id_nil
 }
 
 
 audio_destroy_sound :: proc(sound: ^Sound)
 {
-    data, ok := get_item(&sound_data, sound.handle)
+    data, ok := get_item(&audio_sound_data, sound.handle)
     if !ok
     {
         return
@@ -141,8 +150,8 @@ audio_destroy_sound :: proc(sound: ^Sound)
     rl.StopSound(data)
     rl.UnloadSound(data)
 
-    remove_item(&sound_data, sound.handle)
-    sound.handle = 0
+    remove_item(&audio_sound_data, sound.handle)
+    sound.handle = audio_sound_data.id_nil
 }
 
 
@@ -150,8 +159,8 @@ audio_init_audio :: proc() -> bool
 {
     rl.InitAudioDevice()
 
-    init_audio_list(&music_data)
-    init_audio_list(&sound_data)
+    init_audio_list(&audio_music_data)
+    init_audio_list(&audio_sound_data)
 
     return rl.IsAudioDeviceReady()
 }
@@ -159,8 +168,8 @@ audio_init_audio :: proc() -> bool
 
 audio_close_audio :: proc()
 {
-    close_audio_list(&music_data, rl.UnloadMusicStream)
-    close_audio_list(&sound_data, rl.UnloadSound)
+    close_audio_list(&audio_music_data, rl.UnloadMusicStream)
+    close_audio_list(&audio_sound_data, rl.UnloadSound)
     rl.CloseAudioDevice()
 }
 
@@ -170,13 +179,15 @@ audio_load_music_from_file :: proc(music_file_path: string, music: ^Music) -> bo
     reset_music(music)
 
     path := strings.clone_to_cstring(music_file_path)
+    defer delete(path)
+
     data := rl.LoadMusicStream(path)
     if !rl.IsMusicValid(data)
     {
         return false
     }
 
-    id, ok := add_item(&music_data, data, string(path))
+    id, ok := add_item(&audio_music_data, data)
     if ok
     {
         music.handle = id
@@ -191,13 +202,15 @@ audio_load_sound_from_file :: proc(music_file_path: string, sound: ^Sound) -> bo
     reset_sound(sound)
 
     path := strings.clone_to_cstring(music_file_path)
+    defer delete(path)
+
     data := rl.LoadSound(path)
     if !rl.IsSoundValid(data)
     {
         return false
     }
 
-    id, ok := add_item(&sound_data, data, string(path))
+    id, ok := add_item(&audio_sound_data, data)
     if ok
     {
         sound.handle = id
@@ -211,8 +224,8 @@ audio_load_music_from_bytes :: proc(bytes: ByteView, music: ^Music) -> bool
 {
     reset_music(music)
 
-    length := len(bytes.data)
-    p := slice.bytes_from_ptr(bytes.data, length)
+    length := cast(i32)len(bytes.data)
+    p := raw_data(bytes.data[:])
 
     data := rl.LoadMusicStreamFromMemory("ogg", p, length)
     if !rl.IsMusicValid(data)
@@ -220,7 +233,7 @@ audio_load_music_from_bytes :: proc(bytes: ByteView, music: ^Music) -> bool
         return false
     }
 
-    id, ok := add_item(&music_data, data, string(path))
+    id, ok := add_item(&audio_music_data, data)
     if ok
     {
         music.handle = id
@@ -234,8 +247,8 @@ audio_load_sound_from_bytes :: proc(bytes: ByteView, sound: ^Sound) -> bool
 {
     reset_sound(sound)
 
-    length := len(bytes.data)
-    p := slice.bytes_from_ptr(bytes.data, length)
+    length := cast(i32)len(bytes.data)
+    p := raw_data(bytes.data[:])
 
     wave := rl.LoadWaveFromMemory("ogg", p, length)
     defer rl.UnloadWave(wave)
@@ -250,11 +263,63 @@ audio_load_sound_from_bytes :: proc(bytes: ByteView, sound: ^Sound) -> bool
         return false
     }
 
-    id, ok := add_item(&sound_data, data, string(path))
+    id, ok := add_item(&audio_sound_data, data)
     if ok
     {
         sound.handle = id
     }
 
     return ok
+}
+
+
+audio_play_music :: proc(music: ^Music)
+{
+    /*data, ok := get_item(&audio_music_data, music.handle)
+    if !ok
+    {
+        return
+    }
+
+    rl.PlayMusicStream(data)*/
+}
+
+
+audio_toggle_pause_music :: proc()
+{
+
+}
+
+
+audio_play_sound :: proc(sound: ^Sound)
+{
+    data, ok := get_item(&audio_sound_data, sound.handle)
+    if !ok
+    {
+        return
+    }
+
+    rl.PlaySound(data)
+}
+
+
+audio_stop_sound :: proc(sound: ^Sound)
+{
+    data, ok := get_item(&audio_sound_data, sound.handle)
+    if !ok
+    {
+        return
+    }
+
+    if rl.IsSoundPlaying(data)
+    {
+        rl.StopSound(data)
+    }
+}
+
+
+
+audio_set_master_volume :: proc(volume: f32)
+{
+    rl.SetMasterVolume(volume)
 }
