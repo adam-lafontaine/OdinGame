@@ -7,6 +7,7 @@ import img "../../../lib/image_view"
 import mb "../../../lib/memory_buffer"
 import fs "../../../lib/files"
 import sv "../../../lib/span_view"
+import "../../../lib/io/audio"
 import "../../res"
 
 
@@ -37,18 +38,18 @@ AssetMemory :: struct
 
     music: struct
     {
-        A: ByteView,
-        B: ByteView,
-        C: ByteView,
-        D: ByteView,
+        A: Music,
+        B: Music,
+        C: Music,
+        D: Music,
     },
 
     sound: struct
     {
-        A: ByteView,
-        B: ByteView,
-        C: ByteView,
-        D: ByteView,
+        A: Sound,
+        B: Sound,
+        C: Sound,
+        D: Sound,
     },
 
     image_pixels: img.Buffer32,
@@ -113,6 +114,48 @@ read_image :: proc(memory: ^AssetMemory, id: res.ImageID) -> bool
 }
 
 
+read_music :: proc(memory: ^AssetMemory, id: res.MusicID) -> bool
+{
+    dst: ^Music
+    
+    switch id
+    {
+    case .game_00: dst = &memory.music.A
+    case .game_01: dst = &memory.music.B
+    case .game_02: dst = &memory.music.C
+    case .game_03: dst = &memory.music.D
+    }
+
+    info := res.music[id]
+
+    bv := sv.sub_view(memory.bin_bytes, info.offset, info.size)
+    ok := audio.load_music_from_bytes(bv, dst)
+
+    return ok
+}
+
+
+read_sound :: proc(memory: ^AssetMemory, id: res.SoundID) -> bool
+{
+    dst: ^Sound
+
+    switch id
+    {
+    case .laserRetro_000:      dst = &memory.sound.A
+    case .open_001:            dst = &memory.sound.B
+    case .confirmation_002:    dst = &memory.sound.C
+    case .explosionCrunch_003: dst = &memory.sound.D
+    }
+
+    info := res.sound[id]
+
+    bv := sv.sub_view(memory.bin_bytes, info.offset, info.size)
+    ok := audio.load_sound_from_bytes(bv, dst)
+
+    return ok
+}
+
+
 read_asset_memory :: proc(memory: ^AssetMemory) -> bool
 {
     buffer := &memory.bin_bytes
@@ -140,6 +183,20 @@ read_asset_memory :: proc(memory: ^AssetMemory) -> bool
     }
 
     assert(ok, "*** READ IMAGE ***")
+
+    for id in res.MusicID
+    {
+        ok &= read_music(memory, id)
+    }
+
+    assert(ok, "*** READ MUSIC ***")
+
+    for id in res.SoundID
+    {
+        ok &= read_sound(memory, id)
+    }
+
+    assert(ok, "*** READ MUSIC ***")
     
     return ok
 }
