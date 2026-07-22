@@ -3,10 +3,41 @@ package audio
 
 import "core:strings"
 import "core:slice"
+import "core:mem"
 
 import rl "vendor:raylib"
 
-import "core:fmt"
+//import "core:fmt"
+
+FF_WAV :: ".wav"
+FF_OGG :: ".ogg"
+FF_MP3 :: ".mp3"
+
+
+find_file_format :: proc(bytes: []byte) -> cstring
+{
+    cmp :: proc(b: rawptr, str: string) -> bool
+    {
+        return mem.compare_ptrs(b, raw_data(str), len(str)) == 0
+    }
+
+    b := raw_data(bytes)
+
+    if cmp(b, "RIFF") || cmp(b, "WAVE")
+    {
+        return FF_WAV
+    }
+    else if cmp(b, "OggS")
+    {
+        return FF_OGG
+    }
+    else if cmp(b, "ID3")
+    {
+        return FF_MP3
+    }    
+
+    return "error"
+}
 
 
 reset_music :: proc(music: ^Music)
@@ -27,7 +58,7 @@ reset_sound :: proc(sound: ^Sound)
 MAX_MUSIC_TRACKS :: 8
 MAX_SOUND_TRACKS :: 8
 
-AUDIO_FILE_EXT :: ".ogg" // others?
+//AUDIO_FILE_EXT :: ".ogg" // others?
 
 // $P: ^Music or ^Sound
 // $T: rl.Music or rl.Sound
@@ -302,10 +333,11 @@ audio_load_music_from_bytes :: proc(bytes: ByteView, music: ^Music) -> bool
 {
     reset_music(music)
 
+    ext := find_file_format(bytes.data)
     length := cast(i32)len(bytes.data)
-    p := raw_data(bytes.data[:])
+    p := raw_data(bytes.data)
 
-    data := rl.LoadMusicStreamFromMemory(AUDIO_FILE_EXT, p, length)
+    data := rl.LoadMusicStreamFromMemory(ext, p, length)
     if !rl.IsMusicValid(data)
     {
         return false
@@ -319,10 +351,11 @@ audio_load_sound_from_bytes :: proc(bytes: ByteView, sound: ^Sound) -> bool
 {
     reset_sound(sound)
 
+    ext := find_file_format(bytes.data)
     length := cast(i32)len(bytes.data)
-    p := raw_data(bytes.data[:])
+    p := raw_data(bytes.data)
 
-    wave := rl.LoadWaveFromMemory(AUDIO_FILE_EXT, p, length)
+    wave := rl.LoadWaveFromMemory(ext, p, length)
     defer rl.UnloadWave(wave)
     if !rl.IsWaveValid(wave)
     {
