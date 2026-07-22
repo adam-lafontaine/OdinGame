@@ -58,12 +58,11 @@ reset_sound :: proc(sound: ^Sound)
 MAX_MUSIC_TRACKS :: 8
 MAX_SOUND_TRACKS :: 8
 
-//AUDIO_FILE_EXT :: ".ogg" // others?
 
 // $P: ^Music or ^Sound
 // $T: rl.Music or rl.Sound
 // $H: handle, MusicID or SoundID
-// $N: array size
+// $N: item count
 // Element zero is nil/invalid
 AudioList :: struct($P: typeid, $T: typeid, $H: typeid, $N: u32)
 {

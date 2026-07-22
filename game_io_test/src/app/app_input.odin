@@ -116,6 +116,7 @@ map_gamepad_axis_inputs :: proc(src: inp.GamepadInput, dst: ^GamepadBtnOnOff)
     dst[.stick_right] |= src.vec_stick_right.magnitude > 0
 }
 
+
 @(private="file")
 map_gamepad_thumbstick_input :: proc(src: inp.GamepadInput, dst: ^GamepadStickRotation)
 {
