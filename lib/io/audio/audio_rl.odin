@@ -1,4 +1,4 @@
-#+private
+#+private file
 package audio
 
 import "core:strings"
@@ -240,10 +240,9 @@ get_audio_music :: proc() -> (^Music, rl.Music, bool)
 }
 
 
-
-
 /* api */
 
+@(private)
 audio_destroy_music :: proc(music: ^Music)
 {
     data, ok := get_rl_music(music.handle)
@@ -259,6 +258,7 @@ audio_destroy_music :: proc(music: ^Music)
 }
 
 
+@(private)
 audio_destroy_sound :: proc(sound: ^Sound)
 {
     data, ok := get_rl_sound(sound.handle)
@@ -274,6 +274,7 @@ audio_destroy_sound :: proc(sound: ^Sound)
 }
 
 
+@(private)
 audio_init_audio :: proc() -> bool
 {
     rl.InitAudioDevice()
@@ -287,6 +288,7 @@ audio_init_audio :: proc() -> bool
 }
 
 
+@(private)
 audio_close_audio :: proc()
 {
     close_audio_list(&audio_music_data, rl.UnloadMusicStream)
@@ -295,6 +297,7 @@ audio_close_audio :: proc()
 }
 
 
+@(private)
 audio_load_music_from_file :: proc(music_file_path: string, music: ^Music) -> bool
 {
     reset_music(music)
@@ -312,6 +315,7 @@ audio_load_music_from_file :: proc(music_file_path: string, music: ^Music) -> bo
 }
 
 
+@(private)
 audio_load_sound_from_file :: proc(music_file_path: string, sound: ^Sound) -> bool
 {
     reset_sound(sound)
@@ -329,6 +333,7 @@ audio_load_sound_from_file :: proc(music_file_path: string, sound: ^Sound) -> bo
 }
 
 
+@(private)
 audio_load_music_from_bytes :: proc(bytes: ByteView, music: ^Music) -> bool
 {
     reset_music(music)
@@ -347,6 +352,7 @@ audio_load_music_from_bytes :: proc(bytes: ByteView, music: ^Music) -> bool
 }
 
 
+@(private)
 audio_load_sound_from_bytes :: proc(bytes: ByteView, sound: ^Sound) -> bool
 {
     reset_sound(sound)
@@ -372,6 +378,7 @@ audio_load_sound_from_bytes :: proc(bytes: ByteView, sound: ^Sound) -> bool
 }
 
 
+@(private)
 audio_play_music :: proc(music: ^Music)
 {
     audio_music_stop()
@@ -388,6 +395,7 @@ audio_play_music :: proc(music: ^Music)
 }
 
 
+@(private)
 audio_music_toggle_pause :: proc()
 {
     music, data, ok := get_audio_music()
@@ -423,6 +431,7 @@ audio_music_toggle_pause :: proc()
 }
 
 
+@(private)
 audio_music_stop :: proc()
 {
     music, data, ok := get_audio_music()
@@ -437,6 +446,7 @@ audio_music_stop :: proc()
 }
 
 
+@(private)
 audio_play_sound :: proc(sound: ^Sound)
 {
     data, ok := get_rl_sound(sound.handle)
@@ -456,6 +466,7 @@ audio_play_sound :: proc(sound: ^Sound)
 }
 
 
+@(private)
 audio_stop_sound :: proc(sound: ^Sound)
 {
     sound.is_on = false
@@ -473,13 +484,14 @@ audio_stop_sound :: proc(sound: ^Sound)
 }
 
 
-
+@(private)
 audio_set_master_volume :: proc(volume: f32)
 {
     rl.SetMasterVolume(volume)
 }
 
 
+@(private)
 audio_music_update_jank :: proc()
 {
     data, ok := get_rl_music(audio_music_id)
