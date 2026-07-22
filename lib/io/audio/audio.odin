@@ -12,12 +12,15 @@ SoundID :: distinct i32
 Music :: struct
 {
     handle: MusicID,
+    is_on: bool,
+    is_paused: bool,
 }
 
 
 Sound :: struct
 {
     handle: SoundID,
+    is_on: bool,
 }
 
 
