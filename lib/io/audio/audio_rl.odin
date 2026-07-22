@@ -6,7 +6,7 @@ import "core:slice"
 
 import rl "vendor:raylib"
 
-//import "core:fmt"
+import "core:fmt"
 
 
 reset_music :: proc(music: ^Music)
@@ -80,12 +80,13 @@ close_audio_list :: proc(list: ^AudioList($P, $T, $H, $N), unload: $U)
 }
 
 
-add_item :: proc(list: ^AudioList($P, $T, $H, $N), item: T) -> (H, bool)
+add_item :: proc(list: ^AudioList($P, $T, $H, $N), ptr: P, item: T) -> (H, bool)
 {
     for id: H = list.id_begin; id < list.id_end; id += 1
     {
         if !list.active[id]
         {
+            list.ptr[id] = ptr
             list.items[id] = item
             list.active[id] = true
 
@@ -105,7 +106,9 @@ remove_item :: proc(list: ^AudioList($P, $T, $H, $N), id: H)
     }
 
     list.active[id] = false
+    list.ptr[id] = nil
     list.items[id] = list.items[list.id_nil]
+
 }
 
 
@@ -123,7 +126,6 @@ get_item :: proc(list: ^AudioList($P, $T, $H, $N), id: H) -> (T, bool)
 audio_sound_data: AudioList(^Sound, rl.Sound, SoundID, MAX_SOUND_TRACKS)
 audio_music_data: AudioList(^Music, rl.Music, MusicID, MAX_MUSIC_TRACKS)
 audio_music_id: MusicID = 0
-audio_music_paused: bool = false
 
 
 is_current_music :: proc(id: MusicID) -> bool
@@ -158,7 +160,7 @@ remove_sound :: proc(sound: ^Sound)
 
 add_music :: proc(item: rl.Music, music: ^Music) -> bool
 {
-    id, ok := add_item(&audio_music_data, item)
+    id, ok := add_item(&audio_music_data, music, item)
     if ok
     {
         music.handle = id
@@ -170,7 +172,7 @@ add_music :: proc(item: rl.Music, music: ^Music) -> bool
 
 add_sound :: proc(item: rl.Sound, sound: ^Sound) -> bool
 {
-    id, ok := add_item(&audio_sound_data, item)
+    id, ok := add_item(&audio_sound_data, sound, item)
     if ok
     {
         sound.handle = id
@@ -180,15 +182,30 @@ add_sound :: proc(item: rl.Sound, sound: ^Sound) -> bool
 }
 
 
-get_music :: proc(id: MusicID) -> (rl.Music, bool)
+get_rl_music :: proc(id: MusicID) -> (rl.Music, bool)
 {
     return get_item(&audio_music_data, id)
 }
 
 
-get_sound :: proc(id: SoundID) -> (rl.Sound, bool)
+get_rl_sound :: proc(id: SoundID) -> (rl.Sound, bool)
 {
     return get_item(&audio_sound_data, id)
+}
+
+
+get_audio_music :: proc() -> (^Music, rl.Music, bool)
+{
+    data, ok := get_rl_music(audio_music_id)
+    if !ok
+    {
+        return nil, data, ok
+    }
+
+    music := audio_music_data.ptr[audio_music_id]
+    ok &= music != nil
+
+    return music, data, ok
 }
 
 
@@ -198,7 +215,7 @@ get_sound :: proc(id: SoundID) -> (rl.Sound, bool)
 
 audio_destroy_music :: proc(music: ^Music)
 {
-    data, ok := get_music(music.handle)
+    data, ok := get_rl_music(music.handle)
     if !ok
     {
         return
@@ -213,7 +230,7 @@ audio_destroy_music :: proc(music: ^Music)
 
 audio_destroy_sound :: proc(sound: ^Sound)
 {
-    data, ok := get_sound(sound.handle)
+    data, ok := get_rl_sound(sound.handle)
     if !ok
     {
         return
@@ -234,7 +251,6 @@ audio_init_audio :: proc() -> bool
     init_audio_list(&audio_sound_data)
 
     audio_music_id = audio_music_data.id_nil
-    audio_music_paused = false
 
     return rl.IsAudioDeviceReady()
 }
@@ -325,78 +341,93 @@ audio_load_sound_from_bytes :: proc(bytes: ByteView, sound: ^Sound) -> bool
 
 audio_play_music :: proc(music: ^Music)
 {
-    data, ok := get_music(audio_music_id)
-    if ok
-    {
-        rl.StopMusicStream(data)
-    }
+    audio_music_stop()
 
-    data, ok = get_music(music.handle)
+    data, ok := get_rl_music(music.handle)
     if ok
     {
         rl.PlayMusicStream(data)
         audio_music_id = music.handle
     }
     
-    audio_music_paused = false
+    music.is_on = true
+    music.is_paused = false
 }
 
 
 audio_music_toggle_pause :: proc()
 {
-    data, ok := get_music(audio_music_id)
+    music, data, ok := get_audio_music()
     if !ok
     {
-        audio_music_paused = false
         return
     }
 
-    if rl.IsMusicStreamPlaying(data)
+    playing := rl.IsMusicStreamPlaying(data)
+
+    if music.is_on
+    {
+        music.is_paused = !playing
+    }
+    else if playing
+    {
+        // error
+        rl.StopMusicStream(data)
+        music.is_paused = false
+        return
+    }
+
+    if playing
     {
         rl.PauseMusicStream(data)
-        audio_music_paused = true
+        music.is_paused = true
     }
-    else if audio_music_paused
+    else
     {
         rl.ResumeMusicStream(data)
-        audio_music_paused = false
+        music.is_paused = false
     }
 }
 
 
 audio_music_stop :: proc()
 {
-    data, ok := get_music(audio_music_id)
+    music, data, ok := get_audio_music()
     if !ok
     {
         return
     }
 
     rl.StopMusicStream(data)
-    audio_music_paused = false
+    music.is_on = false
+    music.is_paused = false
 }
 
 
 audio_play_sound :: proc(sound: ^Sound)
 {
-    data, ok := get_sound(sound.handle)
+    data, ok := get_rl_sound(sound.handle)
     if !ok
     {
+        sound.is_on = false
         return
     }
 
     if rl.IsSoundPlaying(data)
     {
-        rl.StopSound(data)
+        rl.StopSound(data)        
     }
 
     rl.PlaySound(data)
+    sound.is_on = true
 }
 
 
 audio_stop_sound :: proc(sound: ^Sound)
 {
-    data, ok := get_sound(sound.handle)
+    sound.is_on = false
+
+    data, ok := get_rl_sound(sound.handle)
     if !ok
     {
         return
@@ -418,14 +449,10 @@ audio_set_master_volume :: proc(volume: f32)
 
 audio_music_update_jank :: proc()
 {
-    data, ok := get_music(audio_music_id)
+    data, ok := get_rl_music(audio_music_id)
     if ok
     {
         // music won't play if this isn't called every frame
         rl.UpdateMusicStream(data)
     }
-
-    // this needs to be called every frame
-    // may as well track state
-    
 }
