@@ -5,15 +5,14 @@ import "core:thread"
 
 import img "../../../lib/image_view"
 import mb "../../../lib/memory_buffer"
-import fs "../../../lib/files"
+//import fs "../../../lib/files"
 import sv "../../../lib/span_view"
 import "../../../lib/io/audio"
 import "../../res"
 
 
-BIN_DATA_PATH :: "./io_test_data.bin"
-BIN_DATA_FALLBACK :: "/home/adam/Repos/OdinGame/game_io_test/res/io_test_data.bin"
-
+//BIN_DATA_PATH :: "./io_test_data.bin"
+//BIN_DATA_FALLBACK :: "/home/adam/Repos/OdinGame/game_io_test/res/io_test_data.bin"
 
 
 AssetStatus :: enum 
@@ -53,7 +52,7 @@ AssetMemory :: struct
     },
 
     image_pixels: img.Buffer32,
-    bin_bytes: ByteBuffer,
+    //bin_bytes: ByteBuffer,
 
     status: AssetStatus
 }
@@ -62,7 +61,7 @@ AssetMemory :: struct
 destroy_asset_memory :: proc(memory: ^AssetMemory)
 {
     img.destroy_buffer32(&memory.image_pixels)
-    mb.destroy_buffer(&memory.bin_bytes)
+    //mb.destroy_buffer(&memory.bin_bytes)
 
     memory.status = .None
 }
@@ -70,27 +69,29 @@ destroy_asset_memory :: proc(memory: ^AssetMemory)
 
 count_asset_pixels :: proc() -> u32
 {
-    w := res.masks[.keyboard].width
-    h := res.masks[.keyboard].height
+    masks := &res.MASK_Images
+
+    w := masks[.keyboard].width
+    h := masks[.keyboard].height
     count := w * h
 
-    w = res.masks[.gamepad].width
-    h = res.masks[.gamepad].height
+    w = masks[.controller].width
+    h = masks[.controller].height
     count += w * h
 
-    w = res.masks[.mouse].width
-    h = res.masks[.mouse].height
+    w = masks[.mouse].width
+    h = masks[.mouse].height
     count += w * h
 
-    w = res.masks[.arrow].width
-    h = res.masks[.arrow].height
+    w = masks[.arrow].width
+    h = masks[.arrow].height
     count += w * h
 
-    return count
+    return cast(u32) count
 }
 
 
-read_image :: proc(memory: ^AssetMemory, id: res.ImageID) -> bool
+read_image :: proc(memory: ^AssetMemory, id: res.MASK_ID) -> bool
 {
     pixels := &memory.image_pixels
 
@@ -98,23 +99,25 @@ read_image :: proc(memory: ^AssetMemory, id: res.ImageID) -> bool
 
     switch id
     {
-    case .keyboard: dst = &memory.image.keyboard
-    case .gamepad:  dst = &memory.image.gamepad
-    case .mouse:    dst = &memory.image.mouse
-    case .arrow:    dst = &memory.image.arrow
+    case .keyboard:   dst = &memory.image.keyboard
+    case .controller: dst = &memory.image.gamepad
+    case .mouse:      dst = &memory.image.mouse
+    case .arrow:      dst = &memory.image.arrow
     case: return false
     }
 
-    info := res.masks[id]
+    info := res.MASK_Images[id]
 
-    bv := sv.sub_view(memory.bin_bytes, info.offset, info.size)
+    //bv := sv.sub_view(memory.bin_bytes, info.offset, info.size)
+
+    bv := ByteView { data = info.data }
     ok := img.read_image_from_memory(bv, pixels, dst)
 
     return ok
 }
 
 
-read_music :: proc(memory: ^AssetMemory, id: res.MusicID) -> bool
+read_music :: proc(memory: ^AssetMemory, id: res.MUSIC_ID) -> bool
 {
     dst: ^Music
     
@@ -126,16 +129,18 @@ read_music :: proc(memory: ^AssetMemory, id: res.MusicID) -> bool
     case .game_03: dst = &memory.music.D
     }
 
-    info := res.music[id]
+    info := res.MUSIC_Audio[id]
 
-    bv := sv.sub_view(memory.bin_bytes, info.offset, info.size)
+    //bv := sv.sub_view(memory.bin_bytes, info.offset, info.size)
+
+    bv := ByteView { data = info.data }
     ok := audio.load_music_from_bytes(bv, dst)
 
     return ok
 }
 
 
-read_sound :: proc(memory: ^AssetMemory, id: res.SoundID) -> bool
+read_sound :: proc(memory: ^AssetMemory, id: res.SOUND_ID) -> bool
 {
     dst: ^Sound
 
@@ -147,9 +152,11 @@ read_sound :: proc(memory: ^AssetMemory, id: res.SoundID) -> bool
     case .explosionCrunch_003: dst = &memory.sound.D
     }
 
-    info := res.sound[id]
+    info := res.SOUND_Audio[id]
 
-    bv := sv.sub_view(memory.bin_bytes, info.offset, info.size)
+    //bv := sv.sub_view(memory.bin_bytes, info.offset, info.size)
+
+    bv := ByteView { data = info.data }
     ok := audio.load_sound_from_bytes(bv, dst)
 
     return ok
@@ -158,12 +165,12 @@ read_sound :: proc(memory: ^AssetMemory, id: res.SoundID) -> bool
 
 read_asset_memory :: proc(memory: ^AssetMemory) -> bool
 {
-    buffer := &memory.bin_bytes
+    /*buffer := &memory.bin_bytes
     if !buffer.ok
     {
         assert(false, "*** BAD BUFFER ***")
         return false
-    }
+    }*/
     
     pixels := &memory.image_pixels
     n_pixels := count_asset_pixels()
@@ -177,21 +184,21 @@ read_asset_memory :: proc(memory: ^AssetMemory) -> bool
 
     ok := true
     
-    for id in res.ImageID
+    for id in res.MASK_ID
     {
         ok &= read_image(memory, id)
     }
 
     assert(ok, "*** READ IMAGE ***")
 
-    for id in res.MusicID
+    for id in res.MUSIC_ID
     {
         ok &= read_music(memory, id)
     }
 
     assert(ok, "*** READ MUSIC ***")
 
-    for id in res.SoundID
+    for id in res.SOUND_ID
     {
         ok &= read_sound(memory, id)
     }
@@ -202,9 +209,19 @@ read_asset_memory :: proc(memory: ^AssetMemory) -> bool
 }
 
 
+@(private="file")
+asset_thread_proc :: proc(t: ^thread.Thread)
+{
+    am := (^AssetMemory)(t.data)
+
+    ok := read_asset_memory(am)
+    am.status = ok ? .Process : .Fail
+}
+
+
 load_asset_memory_async :: proc(memory: ^AssetMemory) -> ^thread.Thread
 {
-    assets_read :: proc(bytes: ByteView, data: rawptr)
+    /*assets_read :: proc(bytes: ByteView, data: rawptr)
     {
         am := (^AssetMemory)(data)
 
@@ -213,7 +230,7 @@ load_asset_memory_async :: proc(memory: ^AssetMemory) -> ^thread.Thread
         {
             am.status = .Fail
             return
-        }        
+        }
 
         ok := read_asset_memory(am)
         am.status = ok ? .Process : .Fail
@@ -234,7 +251,13 @@ load_asset_memory_async :: proc(memory: ^AssetMemory) -> ^thread.Thread
         user_data = memory
     }
 
-    return fs.fetch_start_thread(ctx)    
+    return fs.fetch_start_thread(ctx)*/
+
+    th := thread.create(asset_thread_proc)
+    th.data = memory
+    thread.start(th)
+
+    return th
 }
 
 

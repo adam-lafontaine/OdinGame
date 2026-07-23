@@ -80,7 +80,7 @@ write_image_file_info :: proc(out: $F, dir: string, name: string)
         }
     }
 
-    fmt.fprintfln(out, "{}_Name :: enum", name)
+    fmt.fprintfln(out, "{}_ID :: enum", name)
     fmt.fprintfln(out,"{{",)
     for i in file_info
     {
@@ -90,7 +90,7 @@ write_image_file_info :: proc(out: $F, dir: string, name: string)
     fmt.fprintfln(out, "}\n\n")
 
     fmt.fprintfln(out, "@(rodata)")
-    fmt.fprintfln(out, "{0}_Images := [{0}_Name]ImageInfo {{", name)
+    fmt.fprintfln(out, "{0}_Images := [{0}_ID]ImageInfo {{", name)
 
     fmt_str := "	.%v = {{ width = %v, height = %v, data = #load(\"%v\"), file_type = \"%v\" }},"
 
@@ -138,7 +138,7 @@ write_audio_file_info :: proc(out: $F, dir: string, name: string)
         }
     }
 
-    fmt.fprintfln(out, "{}_Name :: enum", name)
+    fmt.fprintfln(out, "{}_ID :: enum", name)
     fmt.fprintfln(out,"{{",)
     for i in file_info
     {
@@ -148,7 +148,7 @@ write_audio_file_info :: proc(out: $F, dir: string, name: string)
     fmt.fprintfln(out, "}\n\n")
 
     fmt.fprintfln(out, "@(rodata)")
-    fmt.fprintfln(out, "{0}_Audio := [{0}_Name]AudioInfo {{", name)
+    fmt.fprintfln(out, "{0}_Audio := [{0}_ID]AudioInfo {{", name)
 
     fmt_str := "	.%v = {{ data = #load(\"%v\"), file_type = \"%v\" }},"
 
