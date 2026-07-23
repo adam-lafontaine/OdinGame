@@ -17,7 +17,7 @@ AudioInfo :: struct
 }
 
 
-MASK_Name :: enum
+MASK_ID :: enum
 {
     mouse,
     keyboard,
@@ -27,7 +27,7 @@ MASK_Name :: enum
 
 
 @(rodata)
-MASK_Images := [MASK_Name]ImageInfo {
+MASK_Images := [MASK_ID]ImageInfo {
 	.mouse = { width = 80, height = 92, data = #load("/home/adam/Repos/OdinGame/game_io_test/assets/masks/mouse.png"), file_type = ".png" },
 	.keyboard = { width = 272, height = 92, data = #load("/home/adam/Repos/OdinGame/game_io_test/assets/masks/keyboard.png"), file_type = ".png" },
 	.controller = { width = 192, height = 92, data = #load("/home/adam/Repos/OdinGame/game_io_test/assets/masks/controller.png"), file_type = ".png" },
@@ -35,7 +35,7 @@ MASK_Images := [MASK_Name]ImageInfo {
 }
 
 
-MUSIC_Name :: enum
+MUSIC_ID :: enum
 {
     game_03,
     game_02,
@@ -45,7 +45,7 @@ MUSIC_Name :: enum
 
 
 @(rodata)
-MUSIC_Audio := [MUSIC_Name]AudioInfo {
+MUSIC_Audio := [MUSIC_ID]AudioInfo {
 	.game_03 = { data = #load("/home/adam/Repos/OdinGame/game_io_test/assets/music/game_03.ogg"), file_type = ".ogg" },
 	.game_02 = { data = #load("/home/adam/Repos/OdinGame/game_io_test/assets/music/game_02.ogg"), file_type = ".ogg" },
 	.game_01 = { data = #load("/home/adam/Repos/OdinGame/game_io_test/assets/music/game_01.ogg"), file_type = ".ogg" },
@@ -53,7 +53,7 @@ MUSIC_Audio := [MUSIC_Name]AudioInfo {
 }
 
 
-SOUND_Name :: enum
+SOUND_ID :: enum
 {
     laserRetro_000,
     confirmation_002,
@@ -63,7 +63,7 @@ SOUND_Name :: enum
 
 
 @(rodata)
-SOUND_Audio := [SOUND_Name]AudioInfo {
+SOUND_Audio := [SOUND_ID]AudioInfo {
 	.laserRetro_000 = { data = #load("/home/adam/Repos/OdinGame/game_io_test/assets/sfx/laserRetro_000.ogg"), file_type = ".ogg" },
 	.confirmation_002 = { data = #load("/home/adam/Repos/OdinGame/game_io_test/assets/sfx/confirmation_002.ogg"), file_type = ".ogg" },
 	.explosionCrunch_003 = { data = #load("/home/adam/Repos/OdinGame/game_io_test/assets/sfx/explosionCrunch_003.ogg"), file_type = ".ogg" },

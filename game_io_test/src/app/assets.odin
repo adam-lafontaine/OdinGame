@@ -5,14 +5,9 @@ import "core:thread"
 
 import img "../../../lib/image_view"
 import mb "../../../lib/memory_buffer"
-//import fs "../../../lib/files"
 import sv "../../../lib/span_view"
 import "../../../lib/io/audio"
 import "../../res"
-
-
-//BIN_DATA_PATH :: "./io_test_data.bin"
-//BIN_DATA_FALLBACK :: "/home/adam/Repos/OdinGame/game_io_test/res/io_test_data.bin"
 
 
 AssetStatus :: enum 
@@ -52,7 +47,6 @@ AssetMemory :: struct
     },
 
     image_pixels: img.Buffer32,
-    //bin_bytes: ByteBuffer,
 
     status: AssetStatus
 }
@@ -61,7 +55,6 @@ AssetMemory :: struct
 destroy_asset_memory :: proc(memory: ^AssetMemory)
 {
     img.destroy_buffer32(&memory.image_pixels)
-    //mb.destroy_buffer(&memory.bin_bytes)
 
     memory.status = .None
 }
@@ -108,8 +101,6 @@ read_image :: proc(memory: ^AssetMemory, id: res.MASK_ID) -> bool
 
     info := res.MASK_Images[id]
 
-    //bv := sv.sub_view(memory.bin_bytes, info.offset, info.size)
-
     bv := ByteView { data = info.data }
     ok := img.read_image_from_memory(bv, pixels, dst)
 
@@ -130,8 +121,6 @@ read_music :: proc(memory: ^AssetMemory, id: res.MUSIC_ID) -> bool
     }
 
     info := res.MUSIC_Audio[id]
-
-    //bv := sv.sub_view(memory.bin_bytes, info.offset, info.size)
 
     bv := ByteView { data = info.data }
     ok := audio.load_music_from_bytes(bv, dst)
@@ -154,8 +143,6 @@ read_sound :: proc(memory: ^AssetMemory, id: res.SOUND_ID) -> bool
 
     info := res.SOUND_Audio[id]
 
-    //bv := sv.sub_view(memory.bin_bytes, info.offset, info.size)
-
     bv := ByteView { data = info.data }
     ok := audio.load_sound_from_bytes(bv, dst)
 
@@ -164,14 +151,7 @@ read_sound :: proc(memory: ^AssetMemory, id: res.SOUND_ID) -> bool
 
 
 read_asset_memory :: proc(memory: ^AssetMemory) -> bool
-{
-    /*buffer := &memory.bin_bytes
-    if !buffer.ok
-    {
-        assert(false, "*** BAD BUFFER ***")
-        return false
-    }*/
-    
+{    
     pixels := &memory.image_pixels
     n_pixels := count_asset_pixels()
 
@@ -221,38 +201,6 @@ asset_thread_proc :: proc(t: ^thread.Thread)
 
 load_asset_memory_async :: proc(memory: ^AssetMemory) -> ^thread.Thread
 {
-    /*assets_read :: proc(bytes: ByteView, data: rawptr)
-    {
-        am := (^AssetMemory)(data)
-
-        am.bin_bytes = sv.clone(bytes)
-        if !am.bin_bytes.ok
-        {
-            am.status = .Fail
-            return
-        }
-
-        ok := read_asset_memory(am)
-        am.status = ok ? .Process : .Fail
-    }
-
-    assets_fail :: proc(data: rawptr)
-    {
-        assert(false, "*** FAIL ***")
-        am := (^AssetMemory)(data)
-        am.status = .Fail
-    }
-
-    ctx := fs.FetchContext {
-        path = BIN_DATA_PATH,
-        path_backup = BIN_DATA_FALLBACK,
-        read_bytes = assets_read,
-        fetch_failed = assets_fail,
-        user_data = memory
-    }
-
-    return fs.fetch_start_thread(ctx)*/
-
     th := thread.create(asset_thread_proc)
     th.data = memory
     thread.start(th)
