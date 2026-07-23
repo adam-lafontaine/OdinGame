@@ -1,3 +1,4 @@
+#+build ignore
 package res
 // This file should be generated
 
