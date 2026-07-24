@@ -1,4 +1,8 @@
-package res_temp
+#+private
+package res_binary
+
+// generated asset info (binary)
+// expected file: io_test_data.bin 
 
 
 ImageInfo :: struct

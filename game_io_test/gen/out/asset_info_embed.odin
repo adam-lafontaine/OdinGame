@@ -1,4 +1,7 @@
-package res_temp
+#+private
+package res_embed
+
+// generated asset info (embedded)
 
 
 ImageInfo :: struct

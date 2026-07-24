@@ -330,7 +330,9 @@ gen_asset_info_embed :: proc()
     out, _ := os.open(EMBED_OUTPUT_FILE, flags, perm)
 	defer os.close(out)
 
-    fmt.fprintfln(out, "package res_temp\n\n")
+    fmt.fprintfln(out, "#+private\npackage res_embed\n")
+
+    fmt.fprintfln(out, "// generated asset info (embedded)\n\n")
 
     write_file_info_types(out)
     write_image_file_info_embed(out, MASK_DIR, "MASK")
@@ -362,7 +364,10 @@ gen_asset_info_binary :: proc()
     }
     defer fs.close_binary_file(&bin)
 
-    fmt.fprintfln(out, "package res_temp\n\n")
+    fmt.fprintfln(out, "#+private\npackage res_binary\n")
+
+    fmt.fprintfln(out, "// generated asset info (binary)")
+    fmt.fprintfln(out, "// expected file: {} \n\n", slashpath.base(BINARY_OUTPUT_FILE))
 
     write_file_info_types(out)
     write_image_file_info_binary(&bin, out, MASK_DIR, "MASK")
@@ -373,7 +378,7 @@ gen_asset_info_binary :: proc()
 
 main :: proc() 
 {
-    //gen_asset_info_embed()
+    gen_asset_info_embed()
     gen_asset_info_binary()
 
 
