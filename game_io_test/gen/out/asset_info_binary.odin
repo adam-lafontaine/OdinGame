@@ -39,3 +39,39 @@ MASK_Images := [MASK_ID]ImageInfo {
 }
 
 
+MUSIC_ID :: enum
+{
+    game_03,
+    game_02,
+    game_01,
+    game_00,
+}
+
+
+@(rodata)
+MUSIC_Audio := [MUSIC_ID]AudioInfo {
+	.game_03 = { file_type = ".ogg", bin_offset = 5658, bin_length = 2214212 },
+	.game_02 = { file_type = ".ogg", bin_offset = 2219870, bin_length = 924117 },
+	.game_01 = { file_type = ".ogg", bin_offset = 3143987, bin_length = 609497 },
+	.game_00 = { file_type = ".ogg", bin_offset = 3753484, bin_length = 2923535 },
+}
+
+
+SOUND_ID :: enum
+{
+    laserRetro_000,
+    confirmation_002,
+    explosionCrunch_003,
+    open_001,
+}
+
+
+@(rodata)
+SOUND_Audio := [SOUND_ID]AudioInfo {
+	.laserRetro_000 = { file_type = ".ogg", bin_offset = 6677019, bin_length = 12588 },
+	.confirmation_002 = { file_type = ".ogg", bin_offset = 6689607, bin_length = 14169 },
+	.explosionCrunch_003 = { file_type = ".ogg", bin_offset = 6703776, bin_length = 54824 },
+	.open_001 = { file_type = ".ogg", bin_offset = 6758600, bin_length = 9834 },
+}
+
+

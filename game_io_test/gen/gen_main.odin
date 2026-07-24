@@ -250,7 +250,67 @@ write_image_file_info_binary :: proc(bin: ^fs.BinaryFile, out: ^os.File, dir: st
 
 write_audio_file_info_binary :: proc(bin: ^fs.BinaryFile, out: ^os.File, dir: string, name: string)
 {
+    d, d_err := os.open(dir)
+    if d_err != nil
+    {
+        fmt.fprintfln(out, "ERR: {}", dir)
+        return
+    }
 
+    defer os.close(d)
+
+    input_files, _ := os.read_dir(d, -1, context.allocator)
+
+    file_info: [dynamic]os.File_Info
+    defer delete(file_info)
+
+    for i in input_files
+    {
+        // filter file types
+        if is_audio_file(i.name)
+        {
+            append(&file_info, i)
+        }
+    }
+
+    fmt.fprintfln(out, "{}_ID :: enum", name)
+    fmt.fprintfln(out,"{{",)
+    for i in file_info
+    {
+        fmt.fprintfln(out, "    %v,", slashpath.name(i.name))
+    }
+
+    fmt.fprintfln(out, "}\n\n")
+
+    fmt.fprintfln(out, "@(rodata)")
+    fmt.fprintfln(out, "{0}_Audio := [{0}_ID]AudioInfo {{", name)
+
+    fmt_str := "	.%v = {{ file_type = \"%v\", bin_offset = %v, bin_length = %v }},"
+
+    for i in file_info
+    {
+        byte_data, f_err := os.read_entire_file(i.fullpath, context.allocator)
+        defer delete(byte_data)
+
+        if f_err != nil
+        {
+            continue
+        }
+
+        r, ok := fs.append_binary_file(bin, byte_data)
+        if !ok
+        {
+            continue
+        }
+
+        id := slashpath.name(i.name)
+        ft := slashpath.ext(i.name)
+        bo := r.offset
+        bl := r.length
+        fmt.fprintfln(out, fmt_str, id, ft, bo, bl)
+    }
+
+    fmt.fprintfln(out, "}\n\n")
 }
 
 
