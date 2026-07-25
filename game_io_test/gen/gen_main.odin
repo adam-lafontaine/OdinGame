@@ -19,27 +19,6 @@ import "core:image"
 _ :: png
 
 
-STRUCT_IMAGE_ASSET_INFO :: 
-`ImageInfo :: struct
-{    
-    width: int,
-	height: int,
-    file_type: string,
-	embed_data: []u8,
-    bin_offset: int,
-    bin_length: int,
-}`
-
-STRUCT_AUDIO_ASSET_INFO :: 
-`AudioInfo :: struct
-{        
-    file_type: string,
-	embed_data: []u8,
-    bin_offset: int,
-    bin_length: int,
-}`
-
-
 //ASSETS_DIR :: "../assets"
 MASK_DIR :: "../assets/masks"
 MUSIC_DIR :: "../assets/music"
@@ -64,8 +43,49 @@ is_audio_file :: proc(file_name: string) -> bool
 }
 
 
-write_file_info_types :: proc(file: ^os.File)
+write_file_info_types_embed :: proc(file: ^os.File)
 {
+    STRUCT_IMAGE_ASSET_INFO :: 
+`ImageInfo :: struct
+{    
+    width: int,
+	height: int,
+    file_type: string,
+	embed_data: []u8,
+}`
+
+STRUCT_AUDIO_ASSET_INFO :: 
+`AudioInfo :: struct
+{        
+    file_type: string,
+	embed_data: []u8,
+}`    
+    
+    fmt.fprintfln(file, "{}\n\n", STRUCT_IMAGE_ASSET_INFO)    
+    fmt.fprintfln(file, "{}\n\n", STRUCT_AUDIO_ASSET_INFO)
+}
+
+
+write_file_info_types_binary :: proc(file: ^os.File)
+{
+    STRUCT_IMAGE_ASSET_INFO :: 
+`ImageInfo :: struct
+{    
+    width: int,
+	height: int,
+    file_type: string,
+    bin_offset: int,
+    bin_length: int,
+}`
+
+STRUCT_AUDIO_ASSET_INFO :: 
+`AudioInfo :: struct
+{        
+    file_type: string,
+    bin_offset: int,
+    bin_length: int,
+}`
+
     fmt.fprintfln(file, "{}\n\n", STRUCT_IMAGE_ASSET_INFO)    
     fmt.fprintfln(file, "{}\n\n", STRUCT_AUDIO_ASSET_INFO)
 }
@@ -132,6 +152,15 @@ write_image_file_info_embed :: proc(out: ^os.File, dir: string, name: string)
 }
 
 
+write_image_getter_embed :: proc(out: ^os.File, name: string)
+{
+    fmt.fprintfln(out, "get_{0}_bytes :: proc(id: {0}_ID) -> []u8", name)
+    fmt.fprintfln(out, "{{")
+    fmt.fprintfln(out, "    return {0}_Images[id].embed_data", name)
+    fmt.fprintfln(out, "}}\n\n")
+}
+
+
 write_audio_file_info_embed :: proc(out: ^os.File, dir: string, name: string)
 {
     d, d_err := os.open(dir)
@@ -180,6 +209,15 @@ write_audio_file_info_embed :: proc(out: ^os.File, dir: string, name: string)
     }
 
     fmt.fprintfln(out, "}\n\n")
+}
+
+
+write_audio_getter_embed :: proc(out: ^os.File, name: string)
+{
+    fmt.fprintfln(out, "get_{0}_bytes :: proc(id: {0}_ID) -> []u8", name)
+    fmt.fprintfln(out, "{{")
+    fmt.fprintfln(out, "    return {0}_Audio[id].embed_data", name)
+    fmt.fprintfln(out, "}}\n\n")
 }
 
 
@@ -254,6 +292,18 @@ write_image_file_info_binary :: proc(bin: ^fs.BinaryFile, out: ^os.File, dir: st
 }
 
 
+write_image_getter_binary :: proc(out: ^os.File, name: string)
+{
+    fmt.fprintfln(out, "get_{0}_bytes :: proc(id: {0}_ID) -> []u8", name)
+    fmt.fprintfln(out, "{{")
+    fmt.fprintfln(out, "    info := {0}_Images[id]", name)
+    fmt.fprintfln(out, "    begin := info.bin_offset")
+    fmt.fprintfln(out, "    end := begin + info.bin_length")
+    fmt.fprintfln(out, "    return bin_data[begin:end]")
+    fmt.fprintfln(out, "}}\n\n")
+}
+
+
 write_audio_file_info_binary :: proc(bin: ^fs.BinaryFile, out: ^os.File, dir: string, name: string)
 {
     d, d_err := os.open(dir)
@@ -320,6 +370,18 @@ write_audio_file_info_binary :: proc(bin: ^fs.BinaryFile, out: ^os.File, dir: st
 }
 
 
+write_audio_getter_binary :: proc(out: ^os.File, name: string)
+{
+    fmt.fprintfln(out, "get_{0}_bytes :: proc(id: {0}_ID) -> []u8", name)
+    fmt.fprintfln(out, "{{")
+    fmt.fprintfln(out, "    info := {0}_Audio[id]", name)
+    fmt.fprintfln(out, "    begin := info.bin_offset")
+    fmt.fprintfln(out, "    end := begin + info.bin_length")
+    fmt.fprintfln(out, "    return bin_data[begin:end]")
+    fmt.fprintfln(out, "}}\n\n")
+}
+
+
 gen_asset_info_embed :: proc()
 {
     flags: os.File_Flags = {.Write, .Create, .Trunc}
@@ -336,13 +398,16 @@ gen_asset_info_embed :: proc()
     out, _ := os.open(EMBED_INFO_OUTPUT_FILE, flags, perm)
 	defer os.close(out)
 
-    fmt.fprintfln(out, "#+private\npackage res_embed\n")
-    fmt.fprintfln(out, "// generated asset info (embedded)\n\n")
+    fmt.fprintfln(out, "package res_embed\n")
+    fmt.fprintfln(out, "// generated asset info (embedded) {}\n\n", ODIN_COMPILE_TIMESTAMP)
 
-    write_file_info_types(out)
+    write_file_info_types_embed(out)
     write_image_file_info_embed(out, MASK_DIR, "MASK")
     write_audio_file_info_embed(out, MUSIC_DIR, "MUSIC")
     write_audio_file_info_embed(out, SOUND_DIR, "SOUND")
+    write_image_getter_embed(out, "MASK")
+    write_audio_getter_embed(out, "MUSIC")
+    write_audio_getter_embed(out, "SOUND")
 
     fmt.println(EMBED_INFO_OUTPUT_FILE)
 }
@@ -371,14 +436,17 @@ gen_asset_info_binary :: proc()
     }
     defer fs.close_binary_file(&bin)
 
-    fmt.fprintfln(out, "#+private\npackage res_binary\n")
-    fmt.fprintfln(out, "// generated asset info (binary)")
+    fmt.fprintfln(out, "package res_binary\n")
+    fmt.fprintfln(out, "// generated asset info (binary) {}", ODIN_COMPILE_TIMESTAMP)
     fmt.fprintfln(out, "// expected file: {} \n\n", slashpath.base(BINARY_OUTPUT_FILE))
 
-    write_file_info_types(out)
+    write_file_info_types_binary(out)
     write_image_file_info_binary(&bin, out, MASK_DIR, "MASK")
     write_audio_file_info_binary(&bin, out, MUSIC_DIR, "MUSIC")
     write_audio_file_info_binary(&bin, out, SOUND_DIR, "SOUND")
+    write_image_getter_binary(out, "MASK")
+    write_audio_getter_binary(out, "MUSIC")
+    write_audio_getter_binary(out, "SOUND")
 
     fmt.println(BINARY_INFO_OUTPUT_FILE)
     fmt.println(BINARY_OUTPUT_FILE)

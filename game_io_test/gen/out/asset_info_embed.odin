@@ -1,7 +1,6 @@
-#+private
 package res_embed
 
-// generated asset info (embedded)
+// generated asset info (embedded) 1784995917546170000
 
 
 ImageInfo :: struct
@@ -10,8 +9,6 @@ ImageInfo :: struct
 	height: int,
     file_type: string,
 	embed_data: []u8,
-    bin_offset: int,
-    bin_length: int,
 }
 
 
@@ -19,8 +16,6 @@ AudioInfo :: struct
 {        
     file_type: string,
 	embed_data: []u8,
-    bin_offset: int,
-    bin_length: int,
 }
 
 
@@ -75,6 +70,24 @@ SOUND_Audio := [SOUND_ID]AudioInfo {
 	.confirmation_002 = { file_type = ".ogg", embed_data = #load("/home/adam/Repos/OdinGame/game_io_test/assets/sfx/confirmation_002.ogg") },
 	.explosionCrunch_003 = { file_type = ".ogg", embed_data = #load("/home/adam/Repos/OdinGame/game_io_test/assets/sfx/explosionCrunch_003.ogg") },
 	.open_001 = { file_type = ".ogg", embed_data = #load("/home/adam/Repos/OdinGame/game_io_test/assets/sfx/open_001.ogg") },
+}
+
+
+get_MASK_bytes :: proc(id: MASK_ID) -> []u8
+{
+    return MASK_Images[id].embed_data
+}
+
+
+get_MUSIC_bytes :: proc(id: MUSIC_ID) -> []u8
+{
+    return MUSIC_Audio[id].embed_data
+}
+
+
+get_SOUND_bytes :: proc(id: SOUND_ID) -> []u8
+{
+    return SOUND_Audio[id].embed_data
 }
 
 

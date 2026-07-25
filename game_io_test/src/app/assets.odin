@@ -1,13 +1,22 @@
 #+private
 package app
 
+ASSETS_BINARY :: #config(ASSETS_BINARY, false)
+
 import "core:thread"
 
 import img "../../../lib/image_view"
 import mb "../../../lib/memory_buffer"
-import sv "../../../lib/span_view"
 import "../../../lib/io/audio"
+
 import "../../res"
+
+
+get_res_bytes :: proc {
+    res.get_MASK_bytes,
+    res.get_MUSIC_bytes,
+    res.get_SOUND_bytes
+}
 
 
 AssetStatus :: enum 
@@ -19,6 +28,10 @@ AssetStatus :: enum
     Fail
 }
 
+when ASSETS_BINARY {
+
+
+} else {
 
 AssetMemory :: struct 
 {
@@ -52,12 +65,20 @@ AssetMemory :: struct
 }
 
 
+get_asset_bytes :: proc(memory: ^AssetMemory, id: $ID) -> ByteView
+{
+    return ByteView { data = get_res_bytes(id) }
+}
+
+
 destroy_asset_memory :: proc(memory: ^AssetMemory)
 {
     img.destroy_buffer32(&memory.image_pixels)
 
     memory.status = .None
 }
+
+} // !ASSETS_BINARY
 
 
 count_asset_pixels :: proc() -> u32
@@ -84,6 +105,7 @@ count_asset_pixels :: proc() -> u32
 }
 
 
+@(private="file")
 read_image :: proc(memory: ^AssetMemory, id: res.MASK_ID) -> bool
 {
     pixels := &memory.image_pixels
@@ -99,15 +121,14 @@ read_image :: proc(memory: ^AssetMemory, id: res.MASK_ID) -> bool
     case: return false
     }
 
-    info := res.MASK_Images[id]
-
-    bv := ByteView { data = info.data }
+    bv := get_asset_bytes(memory, id)
     ok := img.read_image_from_memory(bv, pixels, dst)
 
     return ok
 }
 
 
+@(private="file")
 read_music :: proc(memory: ^AssetMemory, id: res.MUSIC_ID) -> bool
 {
     dst: ^Music
@@ -120,15 +141,14 @@ read_music :: proc(memory: ^AssetMemory, id: res.MUSIC_ID) -> bool
     case .game_03: dst = &memory.music.D
     }
 
-    info := res.MUSIC_Audio[id]
-
-    bv := ByteView { data = info.data }
+    bv := get_asset_bytes(memory, id)
     ok := audio.load_music_from_bytes(bv, dst)
 
     return ok
 }
 
 
+@(private="file")
 read_sound :: proc(memory: ^AssetMemory, id: res.SOUND_ID) -> bool
 {
     dst: ^Sound
@@ -141,15 +161,14 @@ read_sound :: proc(memory: ^AssetMemory, id: res.SOUND_ID) -> bool
     case .explosionCrunch_003: dst = &memory.sound.D
     }
 
-    info := res.SOUND_Audio[id]
-
-    bv := ByteView { data = info.data }
+    bv := get_asset_bytes(memory, id)
     ok := audio.load_sound_from_bytes(bv, dst)
 
     return ok
 }
 
 
+@(private="file")
 read_asset_memory :: proc(memory: ^AssetMemory) -> bool
 {    
     pixels := &memory.image_pixels

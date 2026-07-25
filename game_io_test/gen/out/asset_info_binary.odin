@@ -1,7 +1,6 @@
-#+private
 package res_binary
 
-// generated asset info (binary)
+// generated asset info (binary) 1784995917546170000
 // expected file: io_test_data.bin 
 
 
@@ -10,7 +9,6 @@ ImageInfo :: struct
     width: int,
 	height: int,
     file_type: string,
-	embed_data: []u8,
     bin_offset: int,
     bin_length: int,
 }
@@ -19,7 +17,6 @@ ImageInfo :: struct
 AudioInfo :: struct
 {        
     file_type: string,
-	embed_data: []u8,
     bin_offset: int,
     bin_length: int,
 }
@@ -76,6 +73,33 @@ SOUND_Audio := [SOUND_ID]AudioInfo {
 	.confirmation_002 = { file_type = ".ogg", bin_offset = 6689607, bin_length = 14169 },
 	.explosionCrunch_003 = { file_type = ".ogg", bin_offset = 6703776, bin_length = 54824 },
 	.open_001 = { file_type = ".ogg", bin_offset = 6758600, bin_length = 9834 },
+}
+
+
+get_MASK_bytes :: proc(id: MASK_ID) -> []u8
+{
+    info := MASK_Images[id]
+    begin := info.bin_offset
+    end := begin + info.bin_length
+    return bin_data[begin:end]
+}
+
+
+get_MUSIC_bytes :: proc(id: MUSIC_ID) -> []u8
+{
+    info := MUSIC_Audio[id]
+    begin := info.bin_offset
+    end := begin + info.bin_length
+    return bin_data[begin:end]
+}
+
+
+get_SOUND_bytes :: proc(id: SOUND_ID) -> []u8
+{
+    info := SOUND_Audio[id]
+    begin := info.bin_offset
+    end := begin + info.bin_length
+    return bin_data[begin:end]
 }
 
 
