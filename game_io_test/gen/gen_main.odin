@@ -1,5 +1,10 @@
 package gen
 
+// build_gen.sh
+GEN_EMBED :: #config(EMBED, false)
+GEN_BINARY :: #config(BINARY, false)
+GEN_NONE :: !GEN_EMBED && !GEN_BINARY
+
 import fs "../../lib/files"
 
 import "core:os"
@@ -40,10 +45,11 @@ MASK_DIR :: "../assets/masks"
 MUSIC_DIR :: "../assets/music"
 SOUND_DIR :: "../assets/sfx"
 
-EMBED_OUTPUT_FILE :: "out/asset_info_embed.odin"
+EMBED_INFO_OUTPUT_FILE :: "out/asset_info_embed.odin"
 
-BINARY_OUTPUT_FILE :: "out/io_test_data.bin"
+
 BINARY_INFO_OUTPUT_FILE :: "out/asset_info_binary.odin"
+BINARY_OUTPUT_FILE :: "out/io_test_data.bin"
 
 
 is_image_file :: proc(file_name: string) -> bool
@@ -327,17 +333,18 @@ gen_asset_info_embed :: proc()
         .Write_Group
     }
 
-    out, _ := os.open(EMBED_OUTPUT_FILE, flags, perm)
+    out, _ := os.open(EMBED_INFO_OUTPUT_FILE, flags, perm)
 	defer os.close(out)
 
     fmt.fprintfln(out, "#+private\npackage res_embed\n")
-
     fmt.fprintfln(out, "// generated asset info (embedded)\n\n")
 
     write_file_info_types(out)
     write_image_file_info_embed(out, MASK_DIR, "MASK")
     write_audio_file_info_embed(out, MUSIC_DIR, "MUSIC")
     write_audio_file_info_embed(out, SOUND_DIR, "SOUND")
+
+    fmt.println(EMBED_INFO_OUTPUT_FILE)
 }
 
 
@@ -365,7 +372,6 @@ gen_asset_info_binary :: proc()
     defer fs.close_binary_file(&bin)
 
     fmt.fprintfln(out, "#+private\npackage res_binary\n")
-
     fmt.fprintfln(out, "// generated asset info (binary)")
     fmt.fprintfln(out, "// expected file: {} \n\n", slashpath.base(BINARY_OUTPUT_FILE))
 
@@ -373,13 +379,17 @@ gen_asset_info_binary :: proc()
     write_image_file_info_binary(&bin, out, MASK_DIR, "MASK")
     write_audio_file_info_binary(&bin, out, MUSIC_DIR, "MUSIC")
     write_audio_file_info_binary(&bin, out, SOUND_DIR, "SOUND")
+
+    fmt.println(BINARY_INFO_OUTPUT_FILE)
+    fmt.println(BINARY_OUTPUT_FILE)
 }
 
 
 main :: proc() 
 {
-    gen_asset_info_embed()
-    gen_asset_info_binary()
+    when GEN_EMBED { gen_asset_info_embed() }
 
+    when GEN_BINARY { gen_asset_info_binary() }
 
+    when GEN_NONE { fmt.println("Nothing...") }
 }
