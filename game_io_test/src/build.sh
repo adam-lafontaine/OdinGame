@@ -2,7 +2,7 @@
 # 
 
 defines=(
-    "-define:ASSETS_BINARY=false"
+    "-define:ASSETS_BINARY=true"
     )
 
 # odin help build

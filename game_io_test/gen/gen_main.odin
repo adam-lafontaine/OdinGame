@@ -294,7 +294,7 @@ write_image_file_info_binary :: proc(bin: ^fs.BinaryFile, out: ^os.File, dir: st
 
 write_image_getter_binary :: proc(out: ^os.File, name: string)
 {
-    fmt.fprintfln(out, "get_{0}_bytes :: proc(id: {0}_ID) -> []u8", name)
+    fmt.fprintfln(out, "get_{0}_bytes :: proc(bin_data: []u8, id: {0}_ID) -> []u8", name)
     fmt.fprintfln(out, "{{")
     fmt.fprintfln(out, "    info := {0}_Images[id]", name)
     fmt.fprintfln(out, "    begin := info.bin_offset")
@@ -372,7 +372,7 @@ write_audio_file_info_binary :: proc(bin: ^fs.BinaryFile, out: ^os.File, dir: st
 
 write_audio_getter_binary :: proc(out: ^os.File, name: string)
 {
-    fmt.fprintfln(out, "get_{0}_bytes :: proc(id: {0}_ID) -> []u8", name)
+    fmt.fprintfln(out, "get_{0}_bytes :: proc(bin_data: []u8, id: {0}_ID) -> []u8", name)
     fmt.fprintfln(out, "{{")
     fmt.fprintfln(out, "    info := {0}_Audio[id]", name)
     fmt.fprintfln(out, "    begin := info.bin_offset")

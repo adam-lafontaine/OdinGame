@@ -1,6 +1,6 @@
 package res_embed
 
-// generated asset info (embedded) 1784995917546170000
+// generated asset info (embedded) 1784996785738280000
 
 
 ImageInfo :: struct

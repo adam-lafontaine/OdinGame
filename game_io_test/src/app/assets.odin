@@ -7,9 +7,11 @@ import "core:thread"
 
 import img "../../../lib/image_view"
 import mb "../../../lib/memory_buffer"
+import fs "../../../lib/files"
+import sv "../../../lib/span_view"
 import "../../../lib/io/audio"
-
 import "../../res"
+
 
 
 get_res_bytes :: proc {
@@ -30,6 +32,55 @@ AssetStatus :: enum
 
 when ASSETS_BINARY {
 
+BIN_DATA_PATH :: "./io_test_data.bin"
+BIN_DATA_FALLBACK :: "/home/adam/Repos/OdinGame/game_io_test/gen/out/io_test_data.bin"
+
+AssetMemory :: struct 
+{
+    image: struct
+    {
+        gamepad: ImageView,
+        keyboard: ImageView,
+        mouse: ImageView,
+        arrow: ImageView
+    },
+
+    music: struct
+    {
+        A: Music,
+        B: Music,
+        C: Music,
+        D: Music,
+    },
+
+    sound: struct
+    {
+        A: Sound,
+        B: Sound,
+        C: Sound,
+        D: Sound,
+    },
+
+    image_pixels: img.Buffer32,
+    bin_bytes: ByteBuffer,
+
+    status: AssetStatus
+}
+
+
+get_asset_bytes :: proc(memory: ^AssetMemory, id: $ID) -> ByteView
+{
+    return ByteView { data = get_res_bytes(memory.bin_bytes.data, id) }
+}
+
+
+destroy_asset_memory :: proc(memory: ^AssetMemory)
+{
+    img.destroy_buffer32(&memory.image_pixels)
+    mb.destroy_buffer(&memory.bin_bytes)
+
+    memory.status = .None
+}
 
 } else {
 
@@ -208,18 +259,56 @@ read_asset_memory :: proc(memory: ^AssetMemory) -> bool
 }
 
 
-@(private="file")
-asset_thread_proc :: proc(t: ^thread.Thread)
-{
-    am := (^AssetMemory)(t.data)
+when ASSETS_BINARY {
 
-    ok := read_asset_memory(am)
-    am.status = ok ? .Process : .Fail
+load_asset_memory_async :: proc(memory: ^AssetMemory) -> ^thread.Thread
+{
+    assets_read :: proc(bytes: ByteView, data: rawptr)
+    {
+        am := (^AssetMemory)(data)
+
+        am.bin_bytes = sv.clone(bytes)
+        if !am.bin_bytes.ok
+        {
+            am.status = .Fail
+            return
+        }        
+
+        ok := read_asset_memory(am)
+        am.status = ok ? .Process : .Fail
+    }
+
+    assets_fail :: proc(data: rawptr)
+    {
+        assert(false, "*** FAIL ***")
+        am := (^AssetMemory)(data)
+        am.status = .Fail
+    }
+
+    ctx := fs.FetchContext {
+        path = BIN_DATA_PATH,
+        path_backup = BIN_DATA_FALLBACK,
+        read_bytes = assets_read,
+        fetch_failed = assets_fail,
+        user_data = memory
+    }
+
+    return fs.fetch_start_thread(ctx)    
 }
+
+} else {
 
 
 load_asset_memory_async :: proc(memory: ^AssetMemory) -> ^thread.Thread
 {
+    asset_thread_proc :: proc(t: ^thread.Thread)
+    {
+        am := (^AssetMemory)(t.data)
+
+        ok := read_asset_memory(am)
+        am.status = ok ? .Process : .Fail
+    }
+
     th := thread.create(asset_thread_proc)
     th.data = memory
     thread.start(th)
@@ -227,4 +316,4 @@ load_asset_memory_async :: proc(memory: ^AssetMemory) -> ^thread.Thread
     return th
 }
 
-
+}

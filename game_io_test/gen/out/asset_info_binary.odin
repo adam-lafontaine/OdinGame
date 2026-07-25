@@ -1,6 +1,6 @@
 package res_binary
 
-// generated asset info (binary) 1784995917546170000
+// generated asset info (binary) 1784996785738280000
 // expected file: io_test_data.bin 
 
 
@@ -76,7 +76,7 @@ SOUND_Audio := [SOUND_ID]AudioInfo {
 }
 
 
-get_MASK_bytes :: proc(id: MASK_ID) -> []u8
+get_MASK_bytes :: proc(bin_data: []u8, id: MASK_ID) -> []u8
 {
     info := MASK_Images[id]
     begin := info.bin_offset
@@ -85,7 +85,7 @@ get_MASK_bytes :: proc(id: MASK_ID) -> []u8
 }
 
 
-get_MUSIC_bytes :: proc(id: MUSIC_ID) -> []u8
+get_MUSIC_bytes :: proc(bin_data: []u8, id: MUSIC_ID) -> []u8
 {
     info := MUSIC_Audio[id]
     begin := info.bin_offset
@@ -94,7 +94,7 @@ get_MUSIC_bytes :: proc(id: MUSIC_ID) -> []u8
 }
 
 
-get_SOUND_bytes :: proc(id: SOUND_ID) -> []u8
+get_SOUND_bytes :: proc(bin_data: []u8, id: SOUND_ID) -> []u8
 {
     info := SOUND_Audio[id]
     begin := info.bin_offset
