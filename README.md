@@ -14,4 +14,6 @@ An app written in Odin with Raylib based on https://github.com/adam-lafontaine/S
 * [x] Process raw image data for UI
 * [x] Play music
 * [x] Play sound effects
-* [ ] Generate code from raw asset files
+* [x] Generate code from raw asset files
+* [x] Generate asset binary
+* [x] Condionally compile to load assets from binary file or embedded

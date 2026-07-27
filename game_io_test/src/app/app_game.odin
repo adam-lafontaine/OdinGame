@@ -20,13 +20,14 @@ screen_dimensions_res :: proc() -> Vec2Du32
     */
 
     // Need screen dimensions before loading assets
+    data := &res.MASK_Images
 
-    g := res.masks[.gamepad]
-    k := res.masks[.keyboard]
-    m := res.masks[.mouse]
+    g := data[.controller]
+    k := data[.keyboard]
+    m := data[.mouse]
 
-    w := math.max(g.width * 2, k.width + m.width)
-    h := math.max(g.height + k.height, g.height + m.height)
+    w := cast(u32)math.max(g.width * 2, k.width + m.width)
+    h := cast(u32)math.max(g.height + k.height, g.height + m.height)
 
     dims := Vec2Du32 { w, h }
 

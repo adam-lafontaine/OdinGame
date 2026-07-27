@@ -38,10 +38,11 @@ copy :: proc(src: SpanView($T), dst: SpanView(T))
 {
     assert(len(src) == len(dst))
 
-    for s, i in src.data // mem.copy()?
-    {
-        dst.data[i] = s
-    }
+    n_bytes := len(src) * size_of(T)
+    s := &src.data[0]
+    d := &dst.data[0]
+
+    mem.copy(d, s, n_bytes)
 }
 
 

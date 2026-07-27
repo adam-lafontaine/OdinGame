@@ -1,10 +1,20 @@
 #!/bin/bash
 # 
 
+defines=(
+    "-define:ASSETS_BINARY=true"
+    )
+
+# odin help build
+flags=(
+    "-debug"
+    "-out:io_test"
+)
+
 echo "→ odin build . $@ OdinGame"
 echo "──────────────────────────────────────────"
 
-output=$(odin build . "$@" 2>&1)
+output=$(odin build . ${defines[*]} ${flags[*]})
 exit_code=$?
 
 CYAN='\033[0;36m'
