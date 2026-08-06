@@ -3,6 +3,8 @@ package window
 
 import rl "vendor:raylib"
 
+import "core:math"
+
 
 /* screen memory */
 
@@ -11,7 +13,9 @@ ScreenMemory :: struct
     window_title: cstring,
     target: rl.RenderTexture2D,
     screen_pixels: rl.Image,
-    render_rect: rl.Rectangle
+
+    screen_rect: rl.Rectangle,
+    render_rect: rl.Rectangle,
 }
 
 
@@ -20,7 +24,6 @@ destroy_screen_texture :: proc(screen: ^ScreenMemory)
     rl.UnloadRenderTexture(screen.target)
     rl.UnloadImage(screen.screen_pixels)
 }
-
 
 
 destroy_screen_memory :: proc(screen: ^ScreenMemory)
@@ -43,7 +46,7 @@ create_screen_window :: proc(screen: ^ScreenMemory, title: cstring, width: u32, 
 
     screen.window_title = title
 
-    ok: bool = rl.IsWindowReady()
+    ok := rl.IsWindowReady()
 
     assert(ok, "*** create_screen_window() ***")
 
@@ -61,7 +64,7 @@ create_screen_window_fullscreen :: proc(screen: ^ScreenMemory, title: cstring) -
 
     screen.window_title = title
 
-    ok: bool = rl.IsWindowReady()
+    ok := rl.IsWindowReady()
 
     assert(ok, "*** create_screen_window_fullscreen() ***")
 
@@ -77,7 +80,7 @@ create_screen_texture :: proc(screen: ^ScreenMemory, width: u32, height: u32) ->
     screen.target = rl.LoadRenderTexture(w, h)
     rl.SetTextureFilter(screen.target.texture, rl.TextureFilter.BILINEAR);
 
-    ok: bool = rl.IsRenderTextureValid(screen.target)
+    ok := rl.IsRenderTextureValid(screen.target)
 
     assert(ok, "*** create_screen_texture() ***")
 
@@ -96,7 +99,7 @@ create_screen_texture :: proc(screen: ^ScreenMemory, width: u32, height: u32) ->
     ok &= px.height == tx.height
     ok &= px.format == rl.PixelFormat.UNCOMPRESSED_R8G8B8A8
 
-    assert(ok, "*** create_screen_texture() ***")
+    assert(ok, "*** create_screen_texture() ***")    
 
     return ok
 }
@@ -190,75 +193,67 @@ set_window_pixels :: proc(screen: ^ScreenMemory, window: ^Window)
 }
 
 
-get_rotate_angle :: proc(r: Rotate) -> f32
+set_screen_rect :: proc(screen: ^ScreenMemory, rotate: Rotate)
 {
-    #partial switch r 
-    {
-        case Rotate.Clockwise_90: return 90.0
-        case Rotate.CounterClockwise_90: return -90.0
+    screen.screen_rect = {
+        x = 0.0,
+        y = 0.0,
+        width = cast(f32)screen.screen_pixels.width,
+        height = cast(f32)screen.screen_pixels.height,
     }
 
-    return 0.0
+    switch rotate
+    {
+    case .CounterClockwise_90:
+        screen.screen_rect.height *= -1
+
+    case .Clockwise_90, .None:
+    }
 }
 
 
 resize_render_rect :: proc(screen: ^ScreenMemory, rotate: Rotate)
 {
-    in_w := cast(f32)screen.screen_pixels.width
-    in_h := cast(f32)screen.screen_pixels.height
-    rot_w := in_w;
-    rot_h := in_h;
+    set_screen_rect(screen, rotate)
     
-    out_w := cast(f32)rl.GetScreenWidth()
-    out_h := cast(f32)rl.GetScreenHeight()
+    w_src := screen.screen_rect.width
+    h_src := math.abs(screen.screen_rect.height)
 
-    if (rotate == Rotate.Clockwise_90 || rotate == Rotate.CounterClockwise_90)
+    w_rot := w_src
+    h_rot := h_src
+
+    if rotate != .None
     {
-        rot_w = in_h
-        rot_h = in_w
+        w_rot = h_src
+        h_rot = w_src
     }
 
-    scale_w := out_w / rot_w
-    scale_h := out_h / rot_h
-    scale := (scale_w < scale_h) ? scale_w : scale_h
+    w_out := cast(f32)rl.GetScreenWidth()
+    h_out := cast(f32)rl.GetScreenHeight()
 
-    w := scale * in_w
-    h := scale * in_h
-    xb := (out_w - w) / 2
-    yb := (out_h - h) / 2
+    w_scale := w_out / w_rot
+    h_scale := h_out / h_rot
+    scale := math.min(w_scale, h_scale)
 
-    r := &screen.render_rect
-    r.x = xb
-    r.y = yb
-    r.width = w
-    r.height = h
+    w_dst := scale * w_rot
+    h_dst := scale * h_rot    
+
+    r_dst: rl.Rectangle = {
+        x = (w_out - w_dst) / 2,
+        y = (h_out - h_dst) / 2,
+        width = w_dst,
+        height = h_dst
+    }
+
+    screen.render_rect = r_dst
 }
 
 
-render_screen_memory :: proc(screen: ^ScreenMemory, rotate: Rotate)
+render_screen_memory :: proc(screen: ^ScreenMemory)
 {
-    r_px : rl.Rectangle
-    r_px.x = 0.0
-    r_px.y = 0.0
-    r_px.width = cast(f32)screen.screen_pixels.width
-    r_px.height = cast(f32)screen.screen_pixels.height
-
-    r_out := screen.render_rect
-
-    origin : rl.Vector2
-    origin.x = 0
-    origin.y = 0
-
-    if (rotate != .None)
-    {
-        // Correct ???
-        origin.x = r_out.width / 2
-        origin.y = r_out.height / 2
-    }
-
+    origin : rl.Vector2 = { 0, 0 }
     tint := rl.WHITE
-
-    angle := get_rotate_angle(rotate)
+    angle := cast(f32)0
 
     rl.UpdateTexture(screen.target.texture, screen.screen_pixels.data)
 
@@ -267,13 +262,13 @@ render_screen_memory :: proc(screen: ^ScreenMemory, rotate: Rotate)
     rl.ClearBackground(rl.BLACK)
 
     rl.DrawTexturePro(
-            screen.target.texture,
-            r_px,
-            screen.render_rect,
-            origin,
-            angle,
-            tint
-        )
+        screen.target.texture,
+        screen.screen_rect,
+        screen.render_rect,
+        origin,
+        angle,
+        tint
+    )
 
     rl.EndDrawing()
 }
@@ -452,7 +447,7 @@ api_render :: proc(window: ^Window, size_changed: b32)
         resize_render_rect(screen, rotate)
     }
 
-    render_screen_memory(screen, rotate)
+    render_screen_memory(screen)
 }
 
 
@@ -465,7 +460,7 @@ api_render_rotated :: proc(window: ^Window, rotate: Rotate, size_changed: b32)
         resize_render_rect(screen, rotate)
     }
 
-    render_screen_memory(screen, rotate)
+    render_screen_memory(screen)
 }
 
 

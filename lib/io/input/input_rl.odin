@@ -182,8 +182,6 @@ api_record_input :: proc(inputs: ^InputArray)
         }
     }
 
-    if (rl.WindowShouldClose()) // ESC key
-    {
-        curr.cmd_end_program = true
-    }
+    curr.cmd_end_program = cast(b8)rl.WindowShouldClose()
+    curr.window_size_changed = cast(b8)rl.IsWindowResized()
 }
