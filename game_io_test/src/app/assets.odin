@@ -82,7 +82,9 @@ destroy_asset_memory :: proc(memory: ^AssetMemory)
     memory.status = .None
 }
 
-} else {
+}
+else // when ASSETS_BINARY
+{
 
 AssetMemory :: struct 
 {
@@ -296,8 +298,9 @@ load_asset_memory_async :: proc(memory: ^AssetMemory) -> ^thread.Thread
     return fs.fetch_start_thread(ctx)    
 }
 
-} else {
-
+} 
+else // when ASSETS_BINARY
+{
 
 load_asset_memory_async :: proc(memory: ^AssetMemory) -> ^thread.Thread
 {

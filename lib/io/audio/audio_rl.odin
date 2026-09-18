@@ -61,14 +61,14 @@ MAX_SOUND_TRACKS :: 8
 
 // $P: ^Music or ^Sound
 // $T: rl.Music or rl.Sound
-// $H: handle, MusicID or SoundID
+// $ID: handle, MusicID or SoundID
 // $N: item count
 // Element zero is nil/invalid
-AudioList :: struct($P: typeid, $T: typeid, $H: typeid, $N: u32)
+AudioList :: struct($P: typeid, $T: typeid, $ID: typeid, $N: u32)
 {
-    id_nil: H,
-    id_begin: H,
-    id_end: H,
+    id_nil: ID,
+    id_begin: ID,
+    id_end: ID,
 
     count: int,
 
@@ -79,13 +79,13 @@ AudioList :: struct($P: typeid, $T: typeid, $H: typeid, $N: u32)
 }
 
 
-init_audio_list :: proc(list: ^AudioList($P, $T, $H, $N))
+init_audio_list :: proc(list: ^AudioList($P, $T, $ID, $N))
 {
     list.count = cast(int)(N + 1)
 
-    list.id_nil = cast(H)0
-    list.id_begin = cast(H)1
-    list.id_end = cast(H)(list.count)
+    list.id_nil = cast(ID)0
+    list.id_begin = cast(ID)1
+    list.id_end = cast(ID)(list.count)
 
     for i in 0..<list.count
     {
@@ -96,7 +96,7 @@ init_audio_list :: proc(list: ^AudioList($P, $T, $H, $N))
 }
 
 
-close_audio_list :: proc(list: ^AudioList($P, $T, $H, $N), unload: $U)
+close_audio_list :: proc(list: ^AudioList($P, $T, $ID, $N), unload: $U)
 {
     for i in 0..<list.count
     {
@@ -110,9 +110,9 @@ close_audio_list :: proc(list: ^AudioList($P, $T, $H, $N), unload: $U)
 }
 
 
-add_item :: proc(list: ^AudioList($P, $T, $H, $N), ptr: P, item: T) -> (H, bool)
+add_item :: proc(list: ^AudioList($P, $T, $ID, $N), ptr: P, item: T) -> (ID, bool)
 {
-    for id: H = list.id_begin; id < list.id_end; id += 1
+    for id := list.id_begin; id < list.id_end; id += 1
     {
         if !list.active[id]
         {
@@ -128,7 +128,7 @@ add_item :: proc(list: ^AudioList($P, $T, $H, $N), ptr: P, item: T) -> (H, bool)
 }
 
 
-remove_item :: proc(list: ^AudioList($P, $T, $H, $N), id: H)
+remove_item :: proc(list: ^AudioList($P, $T, $ID, $N), id: ID)
 {
     if id < list.id_begin || id >= list.id_end
     {
@@ -142,7 +142,7 @@ remove_item :: proc(list: ^AudioList($P, $T, $H, $N), id: H)
 }
 
 
-get_item :: proc(list: ^AudioList($P, $T, $H, $N), id: H) -> (T, bool)
+get_item :: proc(list: ^AudioList($P, $T, $ID, $N), id: ID) -> (T, bool)
 {
     if id < list.id_begin || id >= list.id_end
     {

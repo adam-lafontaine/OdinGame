@@ -398,8 +398,12 @@ gen_asset_info_embed :: proc()
     out, _ := os.open(EMBED_INFO_OUTPUT_FILE, flags, perm)
 	defer os.close(out)
 
-    fmt.fprintfln(out, "package res_embed\n")
+    fmt.fprintfln(out, "package res\n")
     fmt.fprintfln(out, "// generated asset info (embedded) {}\n\n", ODIN_COMPILE_TIMESTAMP)
+
+    fmt.fprintfln(out, "ASSETS_BINARY :: #config(ASSETS_BINARY, false)\n\n")
+
+    fmt.fprintfln(out, "when !ASSETS_BINARY {{\n\n")
 
     write_file_info_types_embed(out)
     write_image_file_info_embed(out, MASK_DIR, "MASK")
@@ -408,6 +412,8 @@ gen_asset_info_embed :: proc()
     write_image_getter_embed(out, "MASK")
     write_audio_getter_embed(out, "MUSIC")
     write_audio_getter_embed(out, "SOUND")
+
+    fmt.fprintfln(out, "\n\n} // when !ASSETS_BINARY\n\n")
 
     fmt.println(EMBED_INFO_OUTPUT_FILE)
 }
@@ -436,9 +442,13 @@ gen_asset_info_binary :: proc()
     }
     defer fs.close_binary_file(&bin)
 
-    fmt.fprintfln(out, "package res_binary\n")
+    fmt.fprintfln(out, "package res\n")
     fmt.fprintfln(out, "// generated asset info (binary) {}", ODIN_COMPILE_TIMESTAMP)
     fmt.fprintfln(out, "// expected file: {} \n\n", slashpath.base(BINARY_OUTPUT_FILE))
+
+    fmt.fprintfln(out, "//ASSETS_BINARY :: #config(ASSETS_BINARY, false)\n\n")
+
+    fmt.fprintfln(out, "when ASSETS_BINARY {{\n\n")
 
     write_file_info_types_binary(out)
     write_image_file_info_binary(&bin, out, MASK_DIR, "MASK")
@@ -447,6 +457,8 @@ gen_asset_info_binary :: proc()
     write_image_getter_binary(out, "MASK")
     write_audio_getter_binary(out, "MUSIC")
     write_audio_getter_binary(out, "SOUND")
+
+    fmt.fprintfln(out, "\n\n} // when ASSETS_BINARY\n\n")
 
     fmt.println(BINARY_INFO_OUTPUT_FILE)
     fmt.println(BINARY_OUTPUT_FILE)

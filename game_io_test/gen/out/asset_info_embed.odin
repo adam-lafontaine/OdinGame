@@ -1,6 +1,12 @@
-package res_embed
+package res
 
-// generated asset info (embedded) 1784996785738280000
+// generated asset info (embedded) 1789736125048883000
+
+
+ASSETS_BINARY :: #config(ASSETS_BINARY, false)
+
+
+when !ASSETS_BINARY {
 
 
 ImageInfo :: struct
@@ -89,5 +95,10 @@ get_SOUND_bytes :: proc(id: SOUND_ID) -> []u8
 {
     return SOUND_Audio[id].embed_data
 }
+
+
+
+
+} // when !ASSETS_BINARY
 
 
