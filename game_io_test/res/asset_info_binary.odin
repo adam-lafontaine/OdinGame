@@ -1,12 +1,14 @@
 package res
 
-// generated asset info (binary) 1784996785738280000
+// generated asset info (binary) 1789736125048883000
 // expected file: io_test_data.bin 
 
 
-ASSETS_BINARY :: #config(ASSETS_BINARY, false)
+//ASSETS_BINARY :: #config(ASSETS_BINARY, false)
+
 
 when ASSETS_BINARY {
+
 
 ImageInfo :: struct
 {    
@@ -107,4 +109,8 @@ get_SOUND_bytes :: proc(bin_data: []u8, id: SOUND_ID) -> []u8
 }
 
 
+
+
 } // when ASSETS_BINARY
+
+

@@ -11,7 +11,7 @@ asset_bin="../gen/out/io_test_data.bin"
 
 
 defines=(
-    "-define:ASSETS_BINARY=true"
+    "-define:ASSETS_BINARY=false"
     )
 
 # odin help build
