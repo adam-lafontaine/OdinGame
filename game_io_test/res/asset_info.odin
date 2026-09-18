@@ -1,6 +1,11 @@
+#+ignore
 package res
 
 // generated asset info (embedded) 1784996785738280000
+
+ASSETS_BINARY :: #config(ASSETS_BINARY, false)
+
+when !ASSETS_BINARY {
 
 
 ImageInfo :: struct
@@ -91,3 +96,4 @@ get_SOUND_bytes :: proc(id: SOUND_ID) -> []u8
 }
 
 
+} // when ASSETS_BINARY == false

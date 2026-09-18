@@ -1,6 +1,15 @@
 #!/bin/bash
 # 
 
+cmd=${1:-build}
+
+out_dir="../build"
+
+out_exe="${out_dir}/io_test"
+
+asset_bin="../gen/out/io_test_data.bin"
+
+
 defines=(
     "-define:ASSETS_BINARY=true"
     )
@@ -8,26 +17,20 @@ defines=(
 # odin help build
 flags=(
     "-debug"
-    "-out:io_test"
+    "-out:${out_exe}"
 )
 
-echo "→ odin build . $@ OdinGame"
+cmd_str="odin ${cmd} . ${defines[*]} ${flags[*]}"
+
+echo "Odin IO Test"
+echo $cmd_str
 echo "──────────────────────────────────────────"
 
-output=$(odin build . ${defines[*]} ${flags[*]})
+mkdir -p $out_dir
+copy_bin=$(cp $asset_bin $out_dir)
+
+output=$(odin $cmd . ${defines[*]} ${flags[*]})
 exit_code=$?
-
-CYAN='\033[0;36m'
-NC='\033[0m'
-
-# Collect error lines and print them in reverse
-echo "$output" | grep -i "Error:" | while read -r line; do
-    filename_part=$(echo "$line" | cut -d':' -f1)
-    filename=$(basename "$filename_part" 2>/dev/null || echo "$filename_part")
-    rest=$(echo "$line" | cut -d':' -f2-)
-    
-    echo -e "${CYAN}${filename}${NC}:$rest"
-done | tac   # tac reverses the lines
 
 echo "──────────────────────────────────────────"
 
